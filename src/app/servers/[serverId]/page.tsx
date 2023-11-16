@@ -237,7 +237,7 @@ export default function Server({ params }: { params: any }) {
   const getServerChannels = async () => {
     if (params.serverId !== "%40me") {
       const response = await axios({
-        url: `https://server-discord-clone.adaptable.app/servers/get-channels/${params.serverId}`,
+        url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/servers/get-channels/${params.serverId}`,
         method: "GET",
       });
       const channels: Channel[] = response.data;
@@ -269,7 +269,7 @@ export default function Server({ params }: { params: any }) {
   };
 
   const getUsersByIds = async (userIds: string[]) => {
-    const url = "https://server-discord-clone.adaptable.app/users/get-users-by-ids";
+    const url = `${process.env.NEXT_PUBLIC_BASE_API_URL}/users/get-users-by-ids`;
     const response = await axios({
       url,
       method: "POST",
@@ -283,7 +283,7 @@ export default function Server({ params }: { params: any }) {
 
   const getMessageHistory = async (channelId: string) => {
     const response = await axios({
-      url: `https://server-discord-clone.adaptable.app/channels/message-history/${channelId}`,
+      url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/channels/message-history/${channelId}`,
     });
     if (response.status === 200) {
       const messageHistory: Message[] = response.data;

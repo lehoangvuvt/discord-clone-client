@@ -114,7 +114,7 @@ const Login = () => {
       name,
     };
     const response = await axios({
-      url: "https://server-discord-clone.adaptable.app/users/register",
+      url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/users/register`,
       method: "POST",
       data,
     });

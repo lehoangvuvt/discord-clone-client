@@ -106,7 +106,7 @@ const Login = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const url = "https://server-discord-clone.adaptable.app/users/login";
+    const url = `${process.env.NEXT_PUBLIC_BASE_API_URL}/users/login`;
     const hashedPassword = bcrypt.hashSync(password, saltHashed);
     const data = { username, password: hashedPassword };
     const response = await axios({
