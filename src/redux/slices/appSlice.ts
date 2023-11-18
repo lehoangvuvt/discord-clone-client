@@ -1,4 +1,4 @@
-import { UserInfo } from "@/types/api.type";
+import { IUserInfo } from "@/types/api.type";
 import { createSlice } from "@reduxjs/toolkit";
 import { Socket } from "socket.io-client";
 
@@ -14,7 +14,7 @@ const initialState: {
   };
   lang: "vi_VN" | "en_US";
   channelId: string | null;
-  userInfo: UserInfo | null;
+  userInfo: IUserInfo | null;
 } = {
   theme: {
     name: "LIGHT",

@@ -1,11 +1,23 @@
 "use client";
 
+import MessageItem from "@/components/MessageItem";
 import { RootState } from "@/redux/store";
+import { APIService } from "@/services/ApiService";
 import { socket } from "@/services/socket";
-import { Channel, Message, UserInfo } from "@/types/api.type";
+import { IAttachment, IChannel, IMessage, IUserInfo } from "@/types/api.type";
+import { getBase64FromFile } from "@/utils/file.utils";
+import { getRandomInt } from "@/utils/number.utils";
+import { PlusCircleFilled, SmileOutlined } from "@ant-design/icons";
 import axios from "axios";
 import Image from "next/image";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  KeyboardEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
@@ -60,12 +72,14 @@ const MessagesContainer = styled.div`
   display: flex;
   flex-flow: column wrap;
   background: #313338;
+  padding-bottom: 20px;
+  position: relative;
 `;
 
 const MessagesHolder = styled.div`
   width: calc(100% - 5px);
   margin-top: 5px;
-  height: 88%;
+  flex: 1;
   display: flex;
   flex-flow: column;
   overflow-y: auto;
@@ -84,92 +98,60 @@ const MessagesHolder = styled.div`
 
 const MessageEditor = styled.form`
   width: 95%;
-  height: 40px;
   display: flex;
-  flex-flow: row wrap;
+  flex-flow: column wrap;
   align-items: center;
   background: #383a40;
   margin: auto auto;
-  border-radius: 6px;
-`;
-
-const MessageInput = styled.input`
-  width: 80%;
-  height: 100%;
-  outline: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 15px;
-  background: none;
-  padding-left: 10px;
-  box-sizing: border-box;
-  margin-left: 20px;
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-`;
-
-const MessageItem = styled.div`
-  width: 100%;
-  padding: 20px 10px;
-  color: white;
-  font-weight: 300;
-  display: flex;
-  flex-flow: row wrap;
-  box-sizing: border-box;
-`;
-
-const MessageItemLeft = styled.div`
-  width: 50px;
-  height: 50px;
   position: relative;
-  border-radius: 50%;
+  border-radius: 6px;
+  min-height: 40px;
   overflow: hidden;
-  background: #111111;
-  box-sizing: border-box;
+  padding-bottom: 10px;
 `;
 
-const MessageItemRight = styled.div`
-  flex: 1;
-  display: flex;
-  flex-flow: column wrap;
-  padding-left: 10px;
-  box-sizing: border-box;
-`;
-
-const MessageItemRightTop = styled.div`
+const MessageHanlder = styled.div`
   width: 100%;
   display: flex;
   flex-flow: row wrap;
   align-items: center;
-  gap: 10px;
-  span:nth-child(1) {
-    color: #d3672b;
-    font-weight: 500;
-    font-size: 14px;
-    cursor: pointer;
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-  span:nth-child(2) {
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 400;
-    font-size: 12px;
-  }
 `;
 
-const MessageItemRightBottom = styled.div`
-  margin-top: 5px;
-  box-sizing: border-box;
-  font-weight: 400;
+const MessageInput = styled.div`
+  -moz-appearance: textfield-multiline;
+  -webkit-appearance: textarea;
+  border: 1px solid gray;
+  font: medium -moz-fixed;
+  font: -webkit-small-control;
+  overflow: hidden;
+  padding: 2px;
+  resize: none;
+  width: 80%;
+  color: rgba(255, 255, 255, 0.75);
+  top: 0;
+  max-height: 100px;
+  min-height: 20px;
+  border: none;
+  outline: none;
   font-size: 14px;
-  line-height: 1.25;
-  img {
-    max-width: 100%;
-    max-height: 200px;
-    margin-top: 5px;
-    margin-right: 10px;
+  padding-right: 10px;
+  margin-top: 4px;
+`;
+
+const EmojiSelector = styled.div<{ $isOpenEmoji: boolean }>`
+  filter: ${(props) =>
+    props.$isOpenEmoji ? "grayscale(0%)" : "grayscale(100%)"};
+  transform: ${(props) => (props.$isOpenEmoji ? "scale(1.15)" : "scale(1)")};
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  height: 100%;
+  margin-top: 5px;
+  transition: all 0.1s ease;
+  &:hover {
+    filter: grayscale(0%);
+    transform: scale(1.15);
   }
 `;
 
@@ -221,17 +203,109 @@ const OnlineUserItem = styled.div`
   }
 `;
 
+const EmojiesPopup = styled.div`
+  position: absolute;
+  right: 2.5%;
+  bottom: 70px;
+  width: 273px;
+  background: #2b2d31;
+  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  border-radius: 6px;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+  z-index: 100;
+  img {
+    padding: 5px;
+    cursor: pointer;
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+`;
+
+const AddFileContainer = styled.label`
+  width: 50px;
+  height: 100%;
+  margin-top: -5px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 21px;
+  cursor: pointer;
+  padding-top: 9.5px;
+  &:hover {
+    color: rgba(255, 255, 255, 0.9);
+  }
+`;
+
+const FilesContainer = styled.div`
+  width: 100%;
+  height: 220px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  padding-left: 10px;
+  padding-right: 10px;
+  gap: 10px;
+  position: relavite;
+`;
+
+const FileItem = styled.div`
+  width: 230px;
+  height: 200px;
+  background: #2b2d31;
+  border-radius: 4px;
+  display: flex;
+  flex-flow: column wrap;
+  align-items: center;
+  padding-top: 10px;
+`;
+
+const FileImageContainer = styled.div`
+  width: 92%;
+  height: 70%;
+  margin-top: 7%;
+  position: relative;
+`;
+
+const FileName = styled.div`
+  width: 100%;
+  flex: 1;
+  font-weight: 200;
+  color: white;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 5px;
+  max-width: 30ch;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis !important;
+`;
+
 export default function Server({ params }: { params: any }) {
-  const [channels, setChannels] = useState<Channel[]>([]);
+  const [channels, setChannels] = useState<IChannel[]>([]);
   const [currentChannelId, setCurrentChannelId] = useState("");
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
-  const [message, setMessage] = useState("");
-  const [messageHistory, setMessageHistory] = useState<Message[]>([]);
+  const [messageHistory, setMessageHistory] = useState<IMessage[]>([]);
   const messageHolderRef = useRef<HTMLDivElement | null>(null);
-  const [onlineUsers, setOnineUsers] = useState<UserInfo[]>([]);
+  const [onlineUsers, setOnineUsers] = useState<IUserInfo[]>([]);
+  const [emoId, setEmoId] = useState(1);
+  const msgInputRef = useRef<HTMLDivElement | null>(null);
+  const [isOpenEmoji, setOpenEmoji] = useState(false);
+  const [attachments, setAttachments] = useState<IAttachment[]>([]);
 
   useEffect(() => {
     getServerChannels();
+    setEmoId(getRandomInt(1, 16));
   }, []);
 
   const getServerChannels = async () => {
@@ -240,12 +314,12 @@ export default function Server({ params }: { params: any }) {
         url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/servers/get-channels/${params.serverId}`,
         method: "GET",
       });
-      const channels: Channel[] = response.data;
+      const channels: IChannel[] = response.data;
       setChannels(channels);
     }
   };
 
-  const handleSelectChannel = async (channel: Channel) => {
+  const handleSelectChannel = async (channel: IChannel) => {
     if (userInfo) {
       const data = {
         _id: userInfo._id,
@@ -276,7 +350,7 @@ export default function Server({ params }: { params: any }) {
       data: userIds,
     });
     if (response.status === 200) {
-      const onlineUsers: UserInfo[] = response.data;
+      const onlineUsers: IUserInfo[] = response.data;
       setOnineUsers(onlineUsers);
     }
   };
@@ -286,22 +360,47 @@ export default function Server({ params }: { params: any }) {
       url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/channels/message-history/${channelId}`,
     });
     if (response.status === 200) {
-      const messageHistory: Message[] = response.data;
+      const messageHistory: IMessage[] = response.data;
       setMessageHistory(messageHistory);
     }
   };
 
-  const handleSendMessage = (e: FormEvent<HTMLFormElement>) => {
-    if (socket && message?.length > 0 && userInfo) {
+  const handleSendMessage = async (
+    e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLDivElement>
+  ) => {
+    if (socket && msgInputRef && msgInputRef.current && userInfo) {
+      const innerHTML = msgInputRef.current.innerHTML;
+      const attachmentsWithoutBase64: IAttachment[] = attachments.map(
+        (attachment) => {
+          const { buffer, name, type } = attachment;
+          return {
+            buffer,
+            name,
+            type,
+          };
+        }
+      );
+      let attachmentIds: string[] = [];
+      const uploadAttachments = attachmentsWithoutBase64.map(
+        async (attachment) => {
+          const response = await APIService.uploadAttachment(attachment);
+          if (response.data) {
+            attachmentIds.push(response.data._id);
+          }
+        }
+      );
+      await Promise.all(uploadAttachments);
       socket.emit(
         "send",
         JSON.stringify({
           channelId: currentChannelId,
-          message,
+          message: innerHTML,
           userId: userInfo._id,
+          attachmentIds: attachmentIds,
         })
       );
-      setMessage("");
+      setAttachments([]);
+      msgInputRef.current.innerHTML = "";
     }
     e.preventDefault();
   };
@@ -315,6 +414,44 @@ export default function Server({ params }: { params: any }) {
         });
     }
   }, [messageHistory]);
+
+  const handleChangeEditable = (e: FormEvent<HTMLElement>) => {
+    if (msgInputRef && msgInputRef.current) {
+      if (e.currentTarget.textContent) {
+        let content = e.currentTarget.textContent;
+        msgInputRef.current.innerHTML = content;
+      } else {
+        msgInputRef.current.innerHTML = "";
+      }
+    }
+  };
+
+  const handleOnClickEmoji = (emojiId: number) => {
+    if (msgInputRef && msgInputRef.current) {
+      const spanImage = `<img style="width: 18px; height: 18px; margin-left: 2px; margin-right: 2px;" src='/images/emoji/icon (${emojiId}).png'/>`;
+      msgInputRef.current.innerHTML += spanImage;
+      setOpenEmoji(false);
+    }
+  };
+
+  const onChangeFile = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    getBase64FromFile(e.target.files[0], (base64: string | null) => {
+      if (base64 !== null) {
+        const type = base64.split(",")[0];
+        const content = base64.split(",")[1];
+        const name = e.target!.files![0].name;
+        const buffer = Buffer.from(content, "base64");
+        const attachment: IAttachment = {
+          buffer,
+          name,
+          type,
+          base64,
+        };
+        setAttachments((value) => [...value, attachment]);
+      }
+    });
+  };
 
   return (
     <Container>
@@ -341,38 +478,73 @@ export default function Server({ params }: { params: any }) {
               {messageHistory &&
                 messageHistory.length > 0 &&
                 messageHistory.map((message, i) => (
-                  <MessageItem key={i}>
-                    <MessageItemLeft>
-                      <Image
-                        src={message.userDetails.avatar}
-                        alt="user-avatar"
-                        fill
-                        style={{ objectFit: "cover", objectPosition: "center" }}
-                      />
-                    </MessageItemLeft>
-                    <MessageItemRight>
-                      <MessageItemRightTop>
-                        <span>{message.userDetails.username}</span>
-                        <span>
-                          {new Date(message.createdAt).toLocaleString()}
-                        </span>
-                      </MessageItemRightTop>
-                      <MessageItemRightBottom
-                        dangerouslySetInnerHTML={{ __html: message.message }}
-                      />
-                    </MessageItemRight>
-                  </MessageItem>
+                  <MessageItem key={message._id} data={message} />
                 ))}
             </MessagesHolder>
+
             <MessageEditor onSubmit={handleSendMessage}>
-              <MessageInput
-                placeholder="Message"
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              <input style={{ display: "none" }} type="submit" value="Send" />
+              {attachments?.length > 0 && (
+                <FilesContainer>
+                  {attachments.map((attachment, i) => (
+                    <FileItem key={i}>
+                      <FileImageContainer>
+                        <Image
+                          fill
+                          style={{
+                            objectFit: "cover",
+                            objectPosition: "center",
+                          }}
+                          alt="file-upload-img"
+                          src={attachment.base64 ?? ""}
+                        />
+                      </FileImageContainer>
+                      <FileName>{attachment.name}</FileName>
+                    </FileItem>
+                  ))}
+                </FilesContainer>
+              )}
+              <MessageHanlder>
+                <AddFileContainer htmlFor="file">
+                  <PlusCircleFilled />
+                </AddFileContainer>
+                <MessageInput
+                  contentEditable
+                  ref={msgInputRef}
+                  onBlur={handleChangeEditable}
+                  onKeyDown={(e) => {
+                    if (e.code === "Enter") {
+                      handleSendMessage(e);
+                    }
+                  }}
+                />
+                <input style={{ display: "none" }} type="submit" value="Send" />
+                <EmojiSelector $isOpenEmoji={isOpenEmoji}>
+                  <Image
+                    onClick={() => setOpenEmoji(!isOpenEmoji)}
+                    src={`/images/emoji/icon (${emoId}).png`}
+                    alt="emoji-icon"
+                    width={26}
+                    height={26}
+                  />
+                </EmojiSelector>
+              </MessageHanlder>
             </MessageEditor>
+            {isOpenEmoji && (
+              <EmojiesPopup>
+                {Array(16)
+                  .fill("")
+                  .map((_, i) => (
+                    <Image
+                      key={i}
+                      width={45}
+                      height={45}
+                      alt={`emo-icon-${i + 1}`}
+                      src={`/images/emoji/icon (${i + 1}).png`}
+                      onClick={() => handleOnClickEmoji(i + 1)}
+                    />
+                  ))}
+              </EmojiesPopup>
+            )}
           </MessagesContainer>
           <OnlineUsersContainer>
             <OnlineTitle>ONLINE - {onlineUsers.length}</OnlineTitle>
@@ -395,6 +567,13 @@ export default function Server({ params }: { params: any }) {
                 </OnlineUserItem>
               ))}
           </OnlineUsersContainer>
+          <input
+            onChange={(e) => onChangeFile(e)}
+            style={{ display: "none" }}
+            type="file"
+            name="file"
+            id="file"
+          />
         </>
       )}
     </Container>

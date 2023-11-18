@@ -2,8 +2,7 @@
 
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { Server, UserInfo } from "@/types/api.type";
+import { IServer } from "@/types/api.type";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -70,7 +69,7 @@ const PanelItem = styled.div`
 `;
 
 const LeftPanel = () => {
-  const [currentServer, setCurrentServer] = useState<Server | null>(null);
+  const [currentServer, setCurrentServer] = useState<IServer | null>(null);
   const router = useRouter();
   const params = useParams();
   const userInfo = useSelector((state: RootState) => state.app.userInfo);

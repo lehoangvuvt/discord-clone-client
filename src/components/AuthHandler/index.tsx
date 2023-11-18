@@ -12,7 +12,7 @@ const AuthHandler = () => {
 
   useEffect(() => {
     if (userInfo && router) {
-      router.push("/servers/@me");
+      router.push("/servers/65546be93e241c42a978df93");
     } else {
       if (pathname !== "/register") {
         router.push("/login");

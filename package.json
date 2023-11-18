@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.2.6",
     "@reduxjs/toolkit": "^1.9.7",
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
