@@ -4,10 +4,10 @@ import MessageItem from "@/components/MessageItem";
 import { RootState } from "@/redux/store";
 import { APIService } from "@/services/ApiService";
 import { socket } from "@/services/socket";
-import { IAttachment, IChannel, IMessage, IUserInfo } from "@/types/api.type";
+import { IChannel, IMessage, IUploadFile, IUserInfo } from "@/types/api.type";
 import { getBase64FromFile } from "@/utils/file.utils";
 import { getRandomInt } from "@/utils/number.utils";
-import { PlusCircleFilled, SmileOutlined } from "@ant-design/icons";
+import { PlusCircleFilled } from "@ant-design/icons";
 import axios from "axios";
 import Image from "next/image";
 import {
@@ -32,7 +32,7 @@ const Container = styled.div`
   margin-top: 50px;
 `;
 
-const ChannelsContainer = styled.div`
+const Left = styled.div`
   width: 18%;
   height: 100%;
   background: #2b2d31;
@@ -40,8 +40,15 @@ const ChannelsContainer = styled.div`
   padding-top: 20px;
 `;
 
+const ChannelsContainer = styled.div`
+  width: 100%;
+  height: 600px;
+  display: flex;
+  flex-flow: column wrap;
+`;
+
 const ChannelItem = styled.div`
-  flex: 1;
+  height: 30px;
   color: white;
   font-weight: 500;
   box-sizing: border-box;
@@ -246,19 +253,19 @@ const AddFileContainer = styled.label`
 
 const FilesContainer = styled.div`
   width: 100%;
-  height: 220px;
   border-bottom: 2px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-flow: row wrap;
   align-items: center;
   padding-left: 10px;
   padding-right: 10px;
-  gap: 10px;
   position: relavite;
+  gap: 10px;
+  padding-top: 10px;
 `;
 
 const FileItem = styled.div`
-  width: 230px;
+  width: calc(25% - 10px);
   height: 200px;
   background: #2b2d31;
   border-radius: 4px;
@@ -289,6 +296,7 @@ const FileName = styled.div`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis !important;
+  padding-bottom: 10px;
 `;
 
 export default function Server({ params }: { params: any }) {
@@ -301,7 +309,7 @@ export default function Server({ params }: { params: any }) {
   const [emoId, setEmoId] = useState(1);
   const msgInputRef = useRef<HTMLDivElement | null>(null);
   const [isOpenEmoji, setOpenEmoji] = useState(false);
-  const [attachments, setAttachments] = useState<IAttachment[]>([]);
+  const [attachments, setAttachments] = useState<IUploadFile[]>([]);
 
   useEffect(() => {
     getServerChannels();
@@ -370,33 +378,26 @@ export default function Server({ params }: { params: any }) {
   ) => {
     if (socket && msgInputRef && msgInputRef.current && userInfo) {
       const innerHTML = msgInputRef.current.innerHTML;
-      const attachmentsWithoutBase64: IAttachment[] = attachments.map(
-        (attachment) => {
-          const { buffer, name, type } = attachment;
-          return {
-            buffer,
-            name,
-            type,
-          };
+      let fileIds: string[] = [];
+      const uploadFiles = attachments.map(async (attachment) => {
+        const response = await APIService.uploadFile({
+          base64: attachment.base64,
+          name: attachment.name,
+          section: attachment.section,
+          type: attachment.type,
+        });
+        if (response.data) {
+          fileIds.push(response.data._id);
         }
-      );
-      let attachmentIds: string[] = [];
-      const uploadAttachments = attachmentsWithoutBase64.map(
-        async (attachment) => {
-          const response = await APIService.uploadAttachment(attachment);
-          if (response.data) {
-            attachmentIds.push(response.data._id);
-          }
-        }
-      );
-      await Promise.all(uploadAttachments);
+      });
+      await Promise.all(uploadFiles);
       socket.emit(
         "send",
         JSON.stringify({
           channelId: currentChannelId,
           message: innerHTML,
           userId: userInfo._id,
-          attachmentIds: attachmentIds,
+          fileIds: fileIds,
         })
       );
       setAttachments([]);
@@ -439,14 +440,12 @@ export default function Server({ params }: { params: any }) {
     getBase64FromFile(e.target.files[0], (base64: string | null) => {
       if (base64 !== null) {
         const type = base64.split(",")[0];
-        const content = base64.split(",")[1];
         const name = e.target!.files![0].name;
-        const buffer = Buffer.from(content, "base64");
-        const attachment: IAttachment = {
-          buffer,
+        const attachment: IUploadFile = {
           name,
           type,
           base64,
+          section: "attachment",
         };
         setAttachments((value) => [...value, attachment]);
       }
@@ -455,22 +454,24 @@ export default function Server({ params }: { params: any }) {
 
   return (
     <Container>
-      <ChannelsContainer>
-        {channels &&
-          channels.length > 0 &&
-          channels.map((channel) => (
-            <ChannelItem
-              className={
-                currentChannelId == channel._id ? "selected" : "not-selected"
-              }
-              onClick={() => handleSelectChannel(channel)}
-              key={channel._id}
-            >
-              <span>#</span>
-              <span>{channel.name}</span>
-            </ChannelItem>
-          ))}
-      </ChannelsContainer>
+      <Left>
+        <ChannelsContainer>
+          {channels &&
+            channels.length > 0 &&
+            channels.map((channel) => (
+              <ChannelItem
+                className={
+                  currentChannelId == channel._id ? "selected" : "not-selected"
+                }
+                onClick={() => handleSelectChannel(channel)}
+                key={channel._id}
+              >
+                <span>#</span>
+                <span>{channel.name}</span>
+              </ChannelItem>
+            ))}
+        </ChannelsContainer>
+      </Left>
       {currentChannelId && (
         <>
           <MessagesContainer>
@@ -487,17 +488,28 @@ export default function Server({ params }: { params: any }) {
                 <FilesContainer>
                   {attachments.map((attachment, i) => (
                     <FileItem key={i}>
-                      <FileImageContainer>
-                        <Image
-                          fill
+                      {attachment.type.includes("audio") ? (
+                        <audio
                           style={{
-                            objectFit: "cover",
-                            objectPosition: "center",
+                            width: "90%",
+                            height: "40px",
                           }}
-                          alt="file-upload-img"
                           src={attachment.base64 ?? ""}
+                          controls
                         />
-                      </FileImageContainer>
+                      ) : (
+                        <FileImageContainer>
+                          <Image
+                            fill
+                            style={{
+                              objectFit: "cover",
+                              objectPosition: "center",
+                            }}
+                            alt="file-upload-img"
+                            src={attachment.base64 ?? ""}
+                          />
+                        </FileImageContainer>
+                      )}
                       <FileName>{attachment.name}</FileName>
                     </FileItem>
                   ))}

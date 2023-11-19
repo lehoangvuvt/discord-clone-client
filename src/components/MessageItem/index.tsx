@@ -5,6 +5,7 @@ import Image from "next/image";
 import styled from "styled-components";
 import { useEffect, useState } from "react";
 import { APIService } from "@/services/ApiService";
+import AudioItem from "../AudioItem";
 
 const Container = styled.div`
   width: 100%;
@@ -79,31 +80,56 @@ const AttachmentsContainer = styled.div`
 `;
 
 const AttachmentItem = styled.div`
-  width: 20%;
+  flex: 1;
+  max-width: 50%;
   height: 150px;
   position: relative;
 `;
 
 const MessageItem = ({ data }: { data: IMessage }) => {
-  const [attachments, setAttachments] = useState<IAttachmentResponse[]>([]);
+  const getAttachmentComponentType = (
+    attachment: IAttachmentResponse
+  ): React.ReactNode => {
+    const fileSrc = `${process.env.NEXT_PUBLIC_FILE_SERVE_URL}/${attachment.fileDetails.path}`;
+    if (attachment.fileDetails.type.includes("image")) {
+      return (
+        <AttachmentItem key={attachment._id}>
+          <Image
+            alt="attachment-img"
+            fill
+            style={{ objectFit: "cover", objectPosition: "center" }}
+            src={fileSrc}
+          />
+        </AttachmentItem>
+      );
+    } else if (attachment.fileDetails.type.includes("audio")) {
+      return (
+        <AttachmentItem
+          style={{ height: "auto", maxWidth: "50%" }}
+          key={attachment.fileDetails.path}
+        >
+          <AudioItem url={fileSrc} fileName={attachment.fileDetails.name} />
+        </AttachmentItem>
+      );
+    } else if (attachment.fileDetails.type.includes("video")) {
+      return (
+        <AttachmentItem
+          style={{ height: "auto" }}
+          key={attachment.fileDetails.path}
+        >
+          <video
+            style={{
+              width: "100%",
 
-  useEffect(() => {
-    if (data.attachments?.length > 0) {
-      getAttachment();
-    }
-  }, []);
-
-  const getAttachment = async () => {
-    const attachments: IAttachmentResponse[] = [];
-    const getAttachments = data.attachments.map(async (attachment) => {
-      const response = await APIService.getAttachment(attachment.attachmentId);
-      if (response.data) {
-        attachments.push(response.data);
-      }
-    });
-    await Promise.all(getAttachments);
-    if (attachments && attachments.length > 0) {
-      setAttachments(attachments);
+              marginTop: "5px",
+              marginBottom: "5px",
+            }}
+            autoPlay={false}
+            src={fileSrc}
+            controls
+          />
+        </AttachmentItem>
+      );
     }
   };
 
@@ -119,26 +145,17 @@ const MessageItem = ({ data }: { data: IMessage }) => {
       </MessageItemLeft>
       <MessageItemRight>
         <MessageItemRightTop>
-          <span>{data.userDetails.username}</span>
+          <span>{data.userDetails.name}</span>
           <span>{new Date(data.createdAt).toLocaleString()}</span>
         </MessageItemRightTop>
         <MessageItemRightBottom
           dangerouslySetInnerHTML={{ __html: data.message }}
         />
         <AttachmentsContainer>
-          {attachments?.length > 0 &&
-            attachments.map((attachment) => (
-              <AttachmentItem key={attachment._id}>
-                <Image
-                  alt="attachment-img"
-                  fill
-                  style={{ objectFit: "cover", objectPosition: "center" }}
-                  src={`${attachment.type},${attachment.buffer.toString(
-                    "base64"
-                  )}`}
-                />
-              </AttachmentItem>
-            ))}
+          {data.attachments?.length > 0 &&
+            data.attachments.map((attachment) =>
+              getAttachmentComponentType(attachment.attachmentDetails)
+            )}
         </AttachmentsContainer>
       </MessageItemRight>
     </Container>

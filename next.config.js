@@ -22,6 +22,18 @@ const nextConfig = {
         protocol: "https",
         hostname: "png.pngtree.com",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
+        protocol: "https",
+        hostname: "server-discord-clone.adaptable.app",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn-icons-png.flaticon.com",
+      },
     ],
   },
   compiler: {

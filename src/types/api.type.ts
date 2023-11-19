@@ -60,17 +60,28 @@ export interface IMessage extends IBaseData {
 export interface IMessageAttachment extends IBaseData {
   messageId: string;
   attachmentId: string;
+  attachmentDetails: IAttachmentResponse;
 }
 
 export type IAttachment = {
-  name: string;
-  type: string;
-  buffer: Buffer;
-  base64?: string;
+  fileId: string;
 };
 
 export interface IAttachmentResponse extends IBaseData {
+  fileId: string;
+  fileDetails: IUploadFileResponse;
+}
+
+export type IUploadFile = {
   name: string;
   type: string;
-  buffer: Buffer;
+  base64: string;
+  section: string;
+};
+
+export interface IUploadFileResponse extends IBaseData {
+  name: string;
+  type: string;
+  section: string;
+  path: string;
 }

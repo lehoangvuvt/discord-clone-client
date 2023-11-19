@@ -5,6 +5,8 @@ import {
   IRegisterData,
   IAttachment,
   IAttachmentResponse,
+  IUploadFile,
+  IUploadFileResponse,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
@@ -46,13 +48,13 @@ export const APIService = {
       };
     }
   },
-  async uploadAttachment(
-    data: IAttachment
-  ): Promise<IApiResponse<IAttachmentResponse>> {
+  async uploadFile(
+    data: IUploadFile
+  ): Promise<IApiResponse<IUploadFileResponse>> {
     const response = await baseAxios.post<
-      IAttachment,
-      AxiosResponse<IAttachmentResponse>
-    >("/attachments/upload", data);
+      IUploadFile,
+      AxiosResponse<IUploadFileResponse>
+    >("/files/upload", data);
     if (response.status === 200) {
       return {
         data: response.data,
@@ -61,7 +63,7 @@ export const APIService = {
       return {
         error: {
           errorCode: response.status,
-          errorMessage: `Cannot upload attachment ${data.name}`,
+          errorMessage: `Cannot upload file ${data.name}`,
         },
       };
     }
@@ -81,7 +83,7 @@ export const APIService = {
       return {
         error: {
           errorCode: response.status,
-          errorMessage: `Cannot upload attachment ${attachmentId}`,
+          errorMessage: `Cannot get attachment ${attachmentId}`,
         },
       };
     }

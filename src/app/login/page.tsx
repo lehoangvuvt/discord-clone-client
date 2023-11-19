@@ -5,8 +5,6 @@ import { ILoginData } from "@/types/api.type";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useDispatch } from "react-redux";
-import bcrypt from "bcryptjs";
-import { saltHashed } from "@/const/bcrypt";
 import { APIService } from "@/services/ApiService";
 import {
   Container,
@@ -24,8 +22,7 @@ const Login = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const hashedPassword = bcrypt.hashSync(password, saltHashed);
-    const data: ILoginData = { username, password: hashedPassword };
+    const data: ILoginData = { username, password };
     const response = await APIService.login(data);
     if (response.data) {
       dispatch(setUserInfo(response.data));

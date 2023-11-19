@@ -7,10 +7,8 @@ import {
   LinkText,
   SubmitButton,
 } from "@/components/LoginRegister/components";
-import { saltHashed } from "@/const/bcrypt";
 import { APIService } from "@/services/ApiService";
 import { IRegisterData } from "@/types/api.type";
-import bcrypt from "bcryptjs";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -23,10 +21,9 @@ const Login = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLElement>) => {
     e.preventDefault();
-    const hashedPassword = bcrypt.hashSync(password, saltHashed);
     const data: IRegisterData = {
       username,
-      password: hashedPassword,
+      password,
       name,
     };
     const response = await APIService.register(data);

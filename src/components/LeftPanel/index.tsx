@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import Link from "next/link";
 
 const Container = styled.div`
   position: absolute;
@@ -22,7 +23,7 @@ const Container = styled.div`
   padding-top: 20px;
 `;
 
-const PanelItem = styled.div`
+const PanelItem = styled(Link)`
   position: relative;
   width: 100%;
   cursor: pointer;
@@ -34,7 +35,7 @@ const PanelItem = styled.div`
   &:after {
     content: "";
     position: absolute;
-    left: -6px;
+    left: -7px;
     background: white;
     border-radius: 50%;
     width: 10px;
@@ -45,7 +46,11 @@ const PanelItem = styled.div`
   &.selected {
     &:after {
       height: 100%;
-      border-radius: 5px;
+      border-radius: 3px;
+    }
+    img {
+      border-radius: 20%;
+      filter: brightness(110%);
     }
   }
 
@@ -93,7 +98,8 @@ const LeftPanel = () => {
         userInfo.joinedServers?.length > 0 &&
         userInfo.joinedServers.map((ele) => (
           <PanelItem
-            onClick={() => router.push(`/servers/${ele._id}`)}
+            href={`/servers/${ele._id}`}
+            shallow={true}
             className={
               currentServer?._id == ele._id ? "selected" : "non-selected"
             }
