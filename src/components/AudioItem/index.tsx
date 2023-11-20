@@ -1,7 +1,13 @@
 "use client";
 
 import { CaretRightFilled, PauseCircleFilled } from "@ant-design/icons";
-import React, { SyntheticEvent, useEffect, useRef, useState } from "react";
+import {
+  SyntheticEvent,
+  useEffect,
+  useRef,
+  useState,
+  CSSProperties,
+} from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -88,7 +94,7 @@ export default function AudioItem({
 }: {
   url: string;
   fileName: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);

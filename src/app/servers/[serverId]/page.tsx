@@ -300,13 +300,13 @@ const FileName = styled.div`
   padding-bottom: 10px;
 `;
 
-export const AttachmentItem = styled.div`
+const UploadItem = styled.div`
   width: 23%;
   height: 150px;
   position: relative;
 `;
 
-const AttachmentController = styled.div`
+const UploadItemController = styled.div`
   position: absolute;
   top: -1px;
   right: -1px;
@@ -342,20 +342,21 @@ export default function Server({ params }: { params: any }) {
   const [attachments, setAttachments] = useState<IUploadFile[]>([]);
 
   useEffect(() => {
-    getServerChannels();
-    setEmoId(getRandomInt(1, 16));
-  }, []);
-
-  const getServerChannels = async () => {
-    if (params.serverId !== "%40me") {
-      const response = await axios({
-        url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/servers/get-channels/${params.serverId}`,
-        method: "GET",
-      });
-      const channels: IChannel[] = response.data;
-      setChannels(channels);
+    if (params && params.serverId) {
+      const getServerChannels = async () => {
+        if (params.serverId !== "%40me") {
+          const response = await axios({
+            url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/servers/get-channels/${params.serverId}`,
+            method: "GET",
+          });
+          const channels: IChannel[] = response.data;
+          setChannels(channels);
+        }
+      };
+      getServerChannels();
+      setEmoId(getRandomInt(1, 16));
     }
-  };
+  }, [params]);
 
   const handleSelectChannel = async (channel: IChannel) => {
     setAttachments([]);
@@ -506,8 +507,8 @@ export default function Server({ params }: { params: any }) {
     const fileSrc = uploadFile.base64;
     if (uploadFile.type.includes("image")) {
       return (
-        <AttachmentItem key={uploadFile.name}>
-          <AttachmentController>
+        <UploadItem key={uploadFile.name}>
+          <UploadItemController>
             <DeleteFilled
               onClick={() =>
                 setAttachments((currentValues) =>
@@ -517,18 +518,18 @@ export default function Server({ params }: { params: any }) {
                 )
               }
             />
-          </AttachmentController>
+          </UploadItemController>
           <Image
             alt="attachment-img"
             fill
             style={{ objectFit: "cover", objectPosition: "center" }}
             src={fileSrc}
           />
-        </AttachmentItem>
+        </UploadItem>
       );
     } else if (uploadFile.type.includes("audio")) {
       return (
-        <AttachmentItem
+        <UploadItem
           style={{
             position: "relative",
             width: "335px",
@@ -536,7 +537,7 @@ export default function Server({ params }: { params: any }) {
           }}
           key={uploadFile.name}
         >
-          <AttachmentController>
+          <UploadItemController>
             <DeleteFilled
               onClick={() =>
                 setAttachments((currentValues) =>
@@ -546,18 +547,18 @@ export default function Server({ params }: { params: any }) {
                 )
               }
             />
-          </AttachmentController>
+          </UploadItemController>
           <AudioItem
             style={{ color: "white" }}
             url={fileSrc}
             fileName={uploadFile.name}
           />
-        </AttachmentItem>
+        </UploadItem>
       );
     } else if (uploadFile.type.includes("video")) {
       return (
-        <AttachmentItem key={uploadFile.name}>
-          <AttachmentController>
+        <UploadItem key={uploadFile.name}>
+          <UploadItemController>
             <DeleteFilled
               onClick={() =>
                 setAttachments((currentValues) =>
@@ -567,7 +568,7 @@ export default function Server({ params }: { params: any }) {
                 )
               }
             />
-          </AttachmentController>
+          </UploadItemController>
           <video
             style={{
               width: "100%",
@@ -578,7 +579,7 @@ export default function Server({ params }: { params: any }) {
             src={fileSrc}
             controls
           />
-        </AttachmentItem>
+        </UploadItem>
       );
     }
   };
