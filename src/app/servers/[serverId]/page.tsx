@@ -1,5 +1,6 @@
 "use client";
 
+import AudioItem from "@/components/AudioItem";
 import MessageItem from "@/components/MessageItem";
 import { RootState } from "@/redux/store";
 import { APIService } from "@/services/ApiService";
@@ -7,7 +8,7 @@ import { socket } from "@/services/socket";
 import { IChannel, IMessage, IUploadFile, IUserInfo } from "@/types/api.type";
 import { getBase64FromFile } from "@/utils/file.utils";
 import { getRandomInt } from "@/utils/number.utils";
-import { PlusCircleFilled } from "@ant-design/icons";
+import { DeleteFilled, PlusCircleFilled } from "@ant-design/icons";
 import axios from "axios";
 import Image from "next/image";
 import {
@@ -299,6 +300,35 @@ const FileName = styled.div`
   padding-bottom: 10px;
 `;
 
+export const AttachmentItem = styled.div`
+  width: 23%;
+  height: 150px;
+  position: relative;
+`;
+
+const AttachmentController = styled.div`
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  background: #2b2d31;
+  z-index: 50;
+  border-radius: 3px;
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
+  font-size: 20px;
+  color: #f50057;
+  padding: 5px 10px;
+  box-sizing: border-box;
+  span {
+    cursor: pointer;
+    transition: all 0.15s ease;
+    filter: brightness(90%);
+    &:hover {
+      transform: scale(1.1);
+      filter: brightness(105%);
+    }
+  }
+`;
+
 export default function Server({ params }: { params: any }) {
   const [channels, setChannels] = useState<IChannel[]>([]);
   const [currentChannelId, setCurrentChannelId] = useState("");
@@ -314,7 +344,6 @@ export default function Server({ params }: { params: any }) {
   useEffect(() => {
     getServerChannels();
     setEmoId(getRandomInt(1, 16));
-    console.log('init')
   }, []);
 
   const getServerChannels = async () => {
@@ -329,6 +358,12 @@ export default function Server({ params }: { params: any }) {
   };
 
   const handleSelectChannel = async (channel: IChannel) => {
+    setAttachments([]);
+    setMessageHistory([]);
+    setOnineUsers([]);
+    if (msgInputRef && msgInputRef.current) {
+      msgInputRef.current.innerHTML = "";
+    }
     if (userInfo) {
       const data = {
         _id: userInfo._id,
@@ -378,31 +413,43 @@ export default function Server({ params }: { params: any }) {
     e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLDivElement>
   ) => {
     if (socket && msgInputRef && msgInputRef.current && userInfo) {
-      const innerHTML = msgInputRef.current.innerHTML;
-      let fileIds: string[] = [];
-      const uploadFiles = attachments.map(async (attachment) => {
-        const response = await APIService.uploadFile({
-          base64: attachment.base64,
-          name: attachment.name,
-          section: attachment.section,
-          type: attachment.type,
-        });
-        if (response.data) {
-          fileIds.push(response.data._id);
+      let innerHTML = msgInputRef.current.innerHTML;
+      let isValidMsg = true;
+      if ((innerHTML + "").length === 0 && attachments.length === 0) {
+        isValidMsg = false;
+      }
+
+      if (isValidMsg) {
+        if ((innerHTML + "").length === 0) {
+          innerHTML = "<span></span>";
         }
-      });
-      await Promise.all(uploadFiles);
-      socket.emit(
-        "send",
-        JSON.stringify({
-          channelId: currentChannelId,
-          message: innerHTML,
-          userId: userInfo._id,
-          fileIds: fileIds,
-        })
-      );
-      setAttachments([]);
-      msgInputRef.current.innerHTML = "";
+        let fileIds: string[] = [];
+        const uploadFiles = attachments.map(async (attachment) => {
+          const response = await APIService.uploadFile({
+            base64: attachment.base64,
+            name: attachment.name,
+            section: attachment.section,
+            type: attachment.type,
+          });
+          if (response.data) {
+            fileIds.push(response.data._id);
+          }
+        });
+        await Promise.all(uploadFiles);
+        socket.emit(
+          "send",
+          JSON.stringify({
+            channelId: currentChannelId,
+            message: innerHTML,
+            userId: userInfo._id,
+            fileIds: fileIds,
+          })
+        );
+        setAttachments([]);
+        msgInputRef.current.innerHTML = "";
+      } else {
+        alert("Please input message");
+      }
     }
     e.preventDefault();
   };
@@ -453,6 +500,89 @@ export default function Server({ params }: { params: any }) {
     });
   };
 
+  const getUploadFileTypeComponent = (
+    uploadFile: IUploadFile
+  ): React.ReactNode => {
+    const fileSrc = uploadFile.base64;
+    if (uploadFile.type.includes("image")) {
+      return (
+        <AttachmentItem key={uploadFile.name}>
+          <AttachmentController>
+            <DeleteFilled
+              onClick={() =>
+                setAttachments((currentValues) =>
+                  currentValues.filter(
+                    (value) => value.name !== uploadFile.name
+                  )
+                )
+              }
+            />
+          </AttachmentController>
+          <Image
+            alt="attachment-img"
+            fill
+            style={{ objectFit: "cover", objectPosition: "center" }}
+            src={fileSrc}
+          />
+        </AttachmentItem>
+      );
+    } else if (uploadFile.type.includes("audio")) {
+      return (
+        <AttachmentItem
+          style={{
+            position: "relative",
+            width: "335px",
+            display: "flex",
+          }}
+          key={uploadFile.name}
+        >
+          <AttachmentController>
+            <DeleteFilled
+              onClick={() =>
+                setAttachments((currentValues) =>
+                  currentValues.filter(
+                    (value) => value.name !== uploadFile.name
+                  )
+                )
+              }
+            />
+          </AttachmentController>
+          <AudioItem
+            style={{ color: "white" }}
+            url={fileSrc}
+            fileName={uploadFile.name}
+          />
+        </AttachmentItem>
+      );
+    } else if (uploadFile.type.includes("video")) {
+      return (
+        <AttachmentItem key={uploadFile.name}>
+          <AttachmentController>
+            <DeleteFilled
+              onClick={() =>
+                setAttachments((currentValues) =>
+                  currentValues.filter(
+                    (value) => value.name !== uploadFile.name
+                  )
+                )
+              }
+            />
+          </AttachmentController>
+          <video
+            style={{
+              width: "100%",
+              marginTop: "5px",
+              marginBottom: "5px",
+            }}
+            autoPlay={false}
+            src={fileSrc}
+            controls
+          />
+        </AttachmentItem>
+      );
+    }
+  };
+
   return (
     <Container>
       <Left>
@@ -487,33 +617,9 @@ export default function Server({ params }: { params: any }) {
             <MessageEditor onSubmit={handleSendMessage}>
               {attachments?.length > 0 && (
                 <FilesContainer>
-                  {attachments.map((attachment, i) => (
-                    <FileItem key={i}>
-                      {attachment.type.includes("audio") ? (
-                        <audio
-                          style={{
-                            width: "90%",
-                            height: "40px",
-                          }}
-                          src={attachment.base64 ?? ""}
-                          controls
-                        />
-                      ) : (
-                        <FileImageContainer>
-                          <Image
-                            fill
-                            style={{
-                              objectFit: "cover",
-                              objectPosition: "center",
-                            }}
-                            alt="file-upload-img"
-                            src={attachment.base64 ?? ""}
-                          />
-                        </FileImageContainer>
-                      )}
-                      <FileName>{attachment.name}</FileName>
-                    </FileItem>
-                  ))}
+                  {attachments.map((attachment, i) =>
+                    getUploadFileTypeComponent(attachment)
+                  )}
                 </FilesContainer>
               )}
               <MessageHanlder>

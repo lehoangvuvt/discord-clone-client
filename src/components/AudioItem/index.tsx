@@ -84,9 +84,11 @@ const FileInfo = styled.div`
 export default function AudioItem({
   url,
   fileName,
+  style,
 }: {
   url: string;
   fileName: string;
+  style?: React.CSSProperties;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -149,7 +151,7 @@ export default function AudioItem({
   };
 
   return (
-    <Container>
+    <Container style={style}>
       <audio
         onLoadedMetadata={handleOnLoad}
         onTimeUpdate={handleOnTimeUpdate}

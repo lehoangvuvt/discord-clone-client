@@ -3,8 +3,6 @@
 import { IAttachmentResponse, IMessage } from "@/types/api.type";
 import Image from "next/image";
 import styled from "styled-components";
-import { useEffect, useState } from "react";
-import { APIService } from "@/services/ApiService";
 import AudioItem from "../AudioItem";
 
 const Container = styled.div`
@@ -79,7 +77,7 @@ const AttachmentsContainer = styled.div`
   gap: 10px;
 `;
 
-const AttachmentItem = styled.div`
+export const AttachmentItem = styled.div`
   flex: 1;
   max-width: 50%;
   height: 150px;
