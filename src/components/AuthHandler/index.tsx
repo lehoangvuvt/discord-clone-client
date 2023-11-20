@@ -12,12 +12,13 @@ const AuthHandler = () => {
 
   useEffect(() => {
     if (userInfo && router) {
-      router.push("/servers/65546be93e241c42a978df93");
+      router.push("/servers/@me");
     } else {
       if (pathname !== "/register") {
         router.push("/login");
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userInfo, router]);
 
   return <></>;
