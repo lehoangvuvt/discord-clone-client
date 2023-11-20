@@ -88,7 +88,7 @@ const MessageItem = ({ data }: { data: IMessage }) => {
   const getAttachmentComponentType = (
     attachment: IAttachmentResponse
   ): React.ReactNode => {
-    const fileSrc = `${process.env.NEXT_PUBLIC_FILE_SERVE_URL}/${attachment.fileDetails.path}`;
+    const fileSrc = attachment.fileDetails.path;
     if (attachment.fileDetails.type.includes("image")) {
       return (
         <AttachmentItem key={attachment._id}>

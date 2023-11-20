@@ -38,6 +38,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "discord-clone-server-production.up.railway.app",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
     ],
   },
   compiler: {
