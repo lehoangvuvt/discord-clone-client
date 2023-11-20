@@ -314,6 +314,7 @@ export default function Server({ params }: { params: any }) {
   useEffect(() => {
     getServerChannels();
     setEmoId(getRandomInt(1, 16));
+    console.log('init')
   }, []);
 
   const getServerChannels = async () => {
