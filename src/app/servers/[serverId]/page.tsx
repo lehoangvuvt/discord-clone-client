@@ -391,7 +391,7 @@ export default function Server({ params }: { params: any }) {
 
     socket.on(`receiveVoiceServer=${params.serverId}`, function (data) {
       const formattedData = JSON.parse(data);
-      if (formattedData.userId !== userInfo._id) {
+      if (formattedData.senderId !== userInfo._id) {
         const audio = new Audio(formattedData.base64);
         audio.play();
       }
