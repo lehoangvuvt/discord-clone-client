@@ -9,6 +9,7 @@ import { IChannel, IMessage, IUploadFile, IUserInfo } from "@/types/api.type";
 import { getBase64FromFile } from "@/utils/file.utils";
 import { getRandomInt } from "@/utils/number.utils";
 import { DeleteFilled, PlusCircleFilled } from "@ant-design/icons";
+import { VolumeUp, VolumeMute } from "@mui/icons-material";
 import axios from "axios";
 import Image from "next/image";
 import {
@@ -46,31 +47,40 @@ const ChannelsContainer = styled.div`
   height: 600px;
   display: flex;
   flex-flow: column wrap;
+  gap: 4px;
 `;
 
 const ChannelItem = styled.div`
-  height: 30px;
+  min-height: 36px;
   color: white;
   font-weight: 500;
   box-sizing: border-box;
-  font-size: 14px;
+  font-size: 15px;
   padding: 5px 10px;
   display: flex;
+  flex-flow: row wrap;
   align-items: center;
   cursor: pointer;
   margin-left: 10px;
   margin-right: 10px;
   border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
   span:nth-child(1) {
     color: rgba(255, 255, 255, 0.5);
     margin-right: 5px;
-    font-size: 20px;
+    font-size: 18px;
   }
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
   &.selected {
+    color: rgba(255, 255, 255, 1);
     background: rgba(255, 255, 255, 0.15);
+  }
+  svg {
+    margin-right: 5px;
+    margin-left: -5px;
+    height: 21px;
   }
 `;
 
@@ -329,6 +339,16 @@ const UploadItemController = styled.div`
   }
 `;
 
+const ChannelTypeTitle = styled.div`
+  width: 100%;
+  padding: 10px 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+`;
+
 export default function Server({ params }: { params: any }) {
   const [channels, setChannels] = useState<IChannel[]>([]);
   const [currentChannelId, setCurrentChannelId] = useState("");
@@ -340,6 +360,11 @@ export default function Server({ params }: { params: any }) {
   const msgInputRef = useRef<HTMLDivElement | null>(null);
   const [isOpenEmoji, setOpenEmoji] = useState(false);
   const [attachments, setAttachments] = useState<IUploadFile[]>([]);
+  const [inVoiceChannel, setInVoiceChannel] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     if (params && params.serverId) {
@@ -357,6 +382,61 @@ export default function Server({ params }: { params: any }) {
       setEmoId(getRandomInt(1, 16));
     }
   }, [params]);
+
+  useEffect(() => {}, [inVoiceChannel, params, userInfo]);
+
+  const startVoice = () => {
+    if (!userInfo) return;
+    let time = 100;
+
+    socket.on(`receiveVoiceServer=${params.serverId}`, function (data) {
+      const formattedData = JSON.parse(data);
+      if (userInfo._id !== formattedData.senderId) {
+        const audio = new Audio(formattedData.base64);
+        audio.play();
+      }
+    });
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+
+      let audioChunks: any = [];
+
+      mediaRecorder.addEventListener("start", function (event) {
+        setInVoiceChannel(true);
+      });
+
+      mediaRecorder.addEventListener("dataavailable", function (event) {
+        audioChunks.push(event.data);
+      });
+
+      mediaRecorder.addEventListener("stop", function () {
+        const audioBlob = new Blob(audioChunks);
+        audioChunks = [];
+        const fileReader = new FileReader();
+        fileReader.readAsDataURL(audioBlob);
+        fileReader.onloadend = function () {
+          const base64String = fileReader.result;
+          const data = {
+            base64: base64String,
+            serverId: params?.serverId,
+            userId: userInfo?._id,
+          };
+          socket.emit("sendVoice", JSON.stringify(data));
+        };
+
+        mediaRecorder.start();
+
+        setTimeout(function () {
+          mediaRecorder.stop();
+        }, time);
+      });
+      setTimeout(function () {
+        mediaRecorder.stop();
+      }, time);
+    });
+  };
 
   const handleSelectChannel = async (channel: IChannel) => {
     setAttachments([]);
@@ -588,6 +668,7 @@ export default function Server({ params }: { params: any }) {
     <Container>
       <Left>
         <ChannelsContainer>
+          <ChannelTypeTitle>Text channels</ChannelTypeTitle>
           {channels &&
             channels.length > 0 &&
             channels.map((channel) => (
@@ -602,6 +683,20 @@ export default function Server({ params }: { params: any }) {
                 <span>{channel.name}</span>
               </ChannelItem>
             ))}
+          <ChannelTypeTitle>Voice channels</ChannelTypeTitle>
+          <ChannelItem
+            className={inVoiceChannel ? "selected" : "not-selected"}
+            onClick={() => {
+              if (!inVoiceChannel) {
+                startVoice();
+              } else {
+                setInVoiceChannel(false);
+              }
+            }}
+          >
+            {inVoiceChannel ? <VolumeUp /> : <VolumeMute />}
+            General
+          </ChannelItem>
         </ChannelsContainer>
       </Left>
       {currentChannelId && (

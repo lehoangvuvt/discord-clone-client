@@ -15,6 +15,10 @@ const initialState: {
   lang: "vi_VN" | "en_US";
   channelId: string | null;
   userInfo: IUserInfo | null;
+  userVoiceState: {
+    mute: boolean;
+    volumeState: number;
+  };
 } = {
   theme: {
     name: "LIGHT",
@@ -26,6 +30,10 @@ const initialState: {
   lang: "vi_VN",
   channelId: null,
   userInfo: null,
+  userVoiceState: {
+    mute: false,
+    volumeState: 1,
+  },
 };
 
 const appSlice = createSlice({
@@ -62,11 +70,25 @@ const appSlice = createSlice({
       state.channelId = action.payload;
     },
     setUserInfo: (state, action) => {
+      localStorage.setItem("USER_INFO", JSON.stringify(action.payload));
       state.userInfo = action.payload;
+    },
+    toggleMute: (state) => {
+      state.userVoiceState.mute = !state.userVoiceState.mute;
+    },
+    toggleVolumeState: (state) => {
+      state.userVoiceState.volumeState =
+        state.userVoiceState.volumeState == 1 ? 0 : 1;
     },
   },
 });
 
-export const { setTheme, setLang, setChannelId, setUserInfo } =
-  appSlice.actions;
+export const {
+  setTheme,
+  setLang,
+  setChannelId,
+  setUserInfo,
+  toggleMute,
+  toggleVolumeState,
+} = appSlice.actions;
 export default appSlice.reducer;

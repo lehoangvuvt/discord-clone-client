@@ -1,10 +1,13 @@
 "use client";
 
 import { RootState } from "@/redux/store";
+import { AudioOutlined } from "@ant-design/icons";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+import { HeadsetOff, Headset, Mic, MicOff } from "@mui/icons-material";
+import { toggleMute, toggleVolumeState } from "@/redux/slices/appSlice";
 
 const Container = styled.div`
   position: absolute;
@@ -52,13 +55,13 @@ const UserInfo = styled.div`
     font-weight: 400;
   }
   span:nth-child(2) {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 10ch;
-    font-weight: 400;
+    font-weight: 300;
   }
 `;
 
@@ -83,12 +86,31 @@ const UserInfoPopup = styled.div`
   }
 `;
 
-const Right = styled.div``;
+const Right = styled.div`
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  height: 100%;
+  flex: 1;
+  gap: 4px;
+  padding-left: 4px;
+  box-sizing: border-box;
+  svg {
+    height: 21px;
+    cursor: pointer;
+    position: relavite;
+  }
+`;
 
 const UserInfoTab = () => {
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
   const [openPopup, setOpenPopup] = useState(false);
   const [forceOpen, setForceOpen] = useState(false);
+  const dispatch = useDispatch();
+  const userVoiceState = useSelector(
+    (state: RootState) => state.app.userVoiceState
+  );
 
   return (
     <Container>
@@ -106,7 +128,18 @@ const UserInfoTab = () => {
           <span>{userInfo?.username ?? ""}</span>
         </UserInfo>
       </Left>
-      <Right></Right>
+      <Right>
+        {userVoiceState.mute ? (
+          <MicOff onClick={() => dispatch(toggleMute())} />
+        ) : (
+          <Mic onClick={() => dispatch(toggleMute())} />
+        )}
+        {userVoiceState.volumeState == 1 ? (
+          <Headset onClick={() => dispatch(toggleVolumeState())} />
+        ) : (
+          <HeadsetOff onClick={() => dispatch(toggleVolumeState())} />
+        )}
+      </Right>
     </Container>
   );
 };

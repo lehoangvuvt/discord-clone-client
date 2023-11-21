@@ -26,6 +26,7 @@ const Login = () => {
     const response = await APIService.login(data);
     if (response.data) {
       dispatch(setUserInfo(response.data));
+      router.push("/servers/655a15b3eb64541f47c42056");
     } else {
       alert(false);
     }

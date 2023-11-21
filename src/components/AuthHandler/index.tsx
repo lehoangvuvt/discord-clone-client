@@ -1,25 +1,34 @@
 "use client";
 
-import { RootState } from "@/redux/store";
+import { setUserInfo } from "@/redux/slices/appSlice";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 const AuthHandler = () => {
-  const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (userInfo && router) {
-      router.push("/servers/@me");
-    } else {
-      if (pathname !== "/register") {
-        router.push("/login");
+    if (router) {
+      if (localStorage.getItem("USER_INFO")) {
+        const userInfo = localStorage.getItem("USER_INFO");
+        if (userInfo) {
+          dispatch(setUserInfo(JSON.parse(userInfo)));
+          router.push("/servers/655a15b3eb64541f47c42056");
+        } else {
+          router.push("/login");
+        }
+      } else {
+        if (pathname !== "/register") {
+          router.push("/login");
+        }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userInfo, router]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   return <></>;
 };
