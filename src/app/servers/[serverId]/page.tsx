@@ -387,14 +387,13 @@ export default function Server({ params }: { params: any }) {
 
   const startVoice = () => {
     if (!userInfo) return;
-    let time = 100;
+    let time = 250;
 
     socket.on(`receiveVoiceServer=${params.serverId}`, function (data) {
       const formattedData = JSON.parse(data);
-      if (userInfo._id !== formattedData.senderId) {
-        const audio = new Audio(formattedData.base64);
-        audio.play();
-      }
+
+      const audio = new Audio(formattedData.base64);
+      audio.play();
     });
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
