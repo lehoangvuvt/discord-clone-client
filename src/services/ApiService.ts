@@ -15,7 +15,10 @@ export const APIService = {
   async login(data: ILoginData): Promise<IApiResponse<IUserInfo>> {
     const response = await baseAxios.post<ILoginData, AxiosResponse<IUserInfo>>(
       "/users/login",
-      data
+      data,
+      {
+        withCredentials: true,
+      }
     );
     if (response.status === 200) {
       return {
@@ -84,6 +87,33 @@ export const APIService = {
         error: {
           errorCode: response.status,
           errorMessage: `Cannot get attachment ${attachmentId}`,
+        },
+      };
+    }
+  },
+  async athentication(): Promise<IApiResponse<IUserInfo>> {
+    try {
+      const response = await baseAxios.get<null, AxiosResponse<IUserInfo>>(
+        `/users/authentication`,
+        { withCredentials: true }
+      );
+      if (response.status === 200) {
+        return {
+          data: response.data,
+        };
+      } else {
+        return {
+          error: {
+            errorCode: response.status,
+            errorMessage: "Athentication failed",
+          },
+        };
+      }
+    } catch (e) {
+      return {
+        error: {
+          errorCode: 401,
+          errorMessage: "Athentication failed",
         },
       };
     }

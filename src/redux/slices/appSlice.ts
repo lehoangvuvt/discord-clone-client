@@ -70,7 +70,6 @@ const appSlice = createSlice({
       state.channelId = action.payload;
     },
     setUserInfo: (state, action) => {
-      localStorage.setItem("USER_INFO", JSON.stringify(action.payload));
       state.userInfo = action.payload;
     },
     toggleMute: (state) => {
