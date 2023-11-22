@@ -75,7 +75,6 @@ const PanelItem = styled(Link)`
 
 const LeftPanel = () => {
   const [currentServer, setCurrentServer] = useState<IServer | null>(null);
-  const router = useRouter();
   const params = useParams();
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
 

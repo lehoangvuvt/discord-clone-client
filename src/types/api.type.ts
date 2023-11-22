@@ -49,6 +49,11 @@ export interface IUserInfo extends IBaseData {
   createdServers: IServer[];
 }
 
+export type UpdateUserInfo = {
+  avatar: string;
+  name: string;
+};
+
 export interface IMessage extends IBaseData {
   message: string;
   channelId: string;

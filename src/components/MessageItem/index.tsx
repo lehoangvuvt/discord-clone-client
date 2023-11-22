@@ -78,7 +78,7 @@ const AttachmentsContainer = styled.div`
 `;
 
 export const AttachmentItem = styled.div`
-  flex: 1;
+  width: 100%;
   max-width: 50%;
   height: 150px;
   position: relative;
@@ -91,7 +91,10 @@ const MessageItem = ({ data }: { data: IMessage }) => {
     const fileSrc = attachment.fileDetails.path;
     if (attachment.fileDetails.type.includes("image")) {
       return (
-        <AttachmentItem key={attachment._id}>
+        <AttachmentItem
+          key={attachment._id}
+          style={{ height: "400px", width: "100%" }}
+        >
           <Image
             alt="attachment-img"
             fill

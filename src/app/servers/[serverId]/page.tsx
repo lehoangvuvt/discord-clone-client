@@ -1,5 +1,6 @@
 "use client";
 
+import useVoiceChat from "@/app/hooks/useVoiceChat";
 import AudioItem from "@/components/AudioItem";
 import MessageItem from "@/components/MessageItem";
 import { RootState } from "@/redux/store";
@@ -360,11 +361,8 @@ export default function Server({ params }: { params: any }) {
   const msgInputRef = useRef<HTMLDivElement | null>(null);
   const [isOpenEmoji, setOpenEmoji] = useState(false);
   const [attachments, setAttachments] = useState<IUploadFile[]>([]);
-  const [inVoiceChannel, setInVoiceChannel] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
-    null
-  );
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const { startVoice, inVoiceChannel, setInVoiceChannel } =
+    useVoiceChat(socket);
 
   useEffect(() => {
     if (params && params.serverId) {
@@ -382,61 +380,6 @@ export default function Server({ params }: { params: any }) {
       setEmoId(getRandomInt(1, 16));
     }
   }, [params]);
-
-  useEffect(() => {}, [inVoiceChannel, params, userInfo]);
-
-  const startVoice = () => {
-    if (!userInfo) return;
-    let time = 250;
-
-    socket.on(`receiveVoiceServer=${params.serverId}`, function (data) {
-      const formattedData = JSON.parse(data);
-      if (formattedData.senderId !== userInfo._id) {
-        const audio = new Audio(formattedData.base64);
-        audio.play();
-      }
-    });
-
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
-
-      let audioChunks: any = [];
-
-      mediaRecorder.addEventListener("start", function (event) {
-        setInVoiceChannel(true);
-      });
-
-      mediaRecorder.addEventListener("dataavailable", function (event) {
-        audioChunks.push(event.data);
-      });
-
-      mediaRecorder.addEventListener("stop", function () {
-        const audioBlob = new Blob(audioChunks);
-        audioChunks = [];
-        const fileReader = new FileReader();
-        fileReader.readAsDataURL(audioBlob);
-        fileReader.onloadend = function () {
-          const base64String = fileReader.result;
-          const data = {
-            base64: base64String,
-            serverId: params?.serverId,
-            userId: userInfo?._id,
-          };
-          socket.emit("sendVoice", JSON.stringify(data));
-        };
-
-        mediaRecorder.start();
-
-        setTimeout(function () {
-          mediaRecorder.stop();
-        }, time);
-      });
-      setTimeout(function () {
-        mediaRecorder.stop();
-      }, time);
-    });
-  };
 
   const handleSelectChannel = async (channel: IChannel) => {
     setAttachments([]);

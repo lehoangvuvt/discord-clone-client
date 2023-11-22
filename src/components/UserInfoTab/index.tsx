@@ -1,13 +1,14 @@
 "use client";
 
 import { RootState } from "@/redux/store";
-import { AudioOutlined } from "@ant-design/icons";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { HeadsetOff, Headset, Mic, MicOff } from "@mui/icons-material";
 import { toggleMute, toggleVolumeState } from "@/redux/slices/appSlice";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import UserDetailsPopup from "./userDetailsPopup";
 
 const Container = styled.div`
   position: absolute;
@@ -105,8 +106,7 @@ const Right = styled.div`
 
 const UserInfoTab = () => {
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
-  const [openPopup, setOpenPopup] = useState(false);
-  const [forceOpen, setForceOpen] = useState(false);
+  const [isOpenPopup, setOpenPopup] = useState(false);
   const dispatch = useDispatch();
   const userVoiceState = useSelector(
     (state: RootState) => state.app.userVoiceState
@@ -114,8 +114,7 @@ const UserInfoTab = () => {
 
   return (
     <Container>
-      {(openPopup || forceOpen) && <UserInfoPopup></UserInfoPopup>}
-      <Left onClick={() => setForceOpen(!forceOpen)}>
+      <Left onClick={() => setOpenPopup(!isOpenPopup)}>
         <Image
           src={userInfo?.avatar ?? ""}
           alt="user-avatar"
@@ -140,6 +139,14 @@ const UserInfoTab = () => {
           <HeadsetOff onClick={() => dispatch(toggleVolumeState())} />
         )}
       </Right>
+      {userInfo && (
+        <UserDetailsPopup
+          key={isOpenPopup + ""}
+          userInfo={userInfo}
+          isOpen={isOpenPopup}
+          setOpenPopup={(state) => setOpenPopup(state)}
+        />
+      )}
     </Container>
   );
 };

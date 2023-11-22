@@ -2,7 +2,6 @@
 
 import styled from "styled-components";
 import LeftPanel from "@/components/LeftPanel";
-import SocketHandler from "@/components/SocketHandler";
 import Header from "@/components/Header";
 import UserInfoTab from "@/components/UserInfoTab";
 
@@ -13,7 +12,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Header />
       <LeftPanel />
       <UserInfoTab />
-      <SocketHandler />
       {children}
     </Container>
   );
