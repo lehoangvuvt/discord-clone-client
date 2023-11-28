@@ -8,23 +8,24 @@ import { useDispatch } from "react-redux";
 import { APIService } from "@/services/ApiService";
 import {
   Container,
-  FieldContainer,
   Form,
-  SubmitButton,
   LinkText,
 } from "@/components/LoginRegister/components";
+import InputField from "@/components/InputField";
+import Button from "@/components/Button";
 
 const Login = () => {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [errorFields, setErrorFields] = useState<string[]>([]);
   const dispatch = useDispatch();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data: ILoginData = { username, password };
     const response = await APIService.login(data);
-    if (response.data) {
+    if (response.status === "Success") {
       dispatch(setUserInfo(response.data));
       router.push("/servers/655a15b3eb64541f47c42056");
     } else {
@@ -35,25 +36,62 @@ const Login = () => {
   return (
     <Container>
       <Form onSubmit={handleSubmit}>
-        <FieldContainer>
-          <span>Username</span>
-          <input
-            required
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </FieldContainer>
-        <FieldContainer>
-          <span>Password</span>
-          <input
-            required
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </FieldContainer>
-        <SubmitButton type="submit">Login</SubmitButton>
+        <InputField
+          onValidChange={(fieldName, isValid) => {
+            if (!isValid) {
+              setErrorFields((oldValue) => [...oldValue, fieldName]);
+            } else {
+              setErrorFields((errorFields) =>
+                errorFields.filter((errorField) => errorField !== fieldName)
+              );
+            }
+          }}
+          onChange={(value) => setUsername(value)}
+          field={{
+            fieldName: "Username",
+            value: username,
+            required: true,
+            fieldProperty: {
+              type: "text",
+            },
+          }}
+        />
+        <InputField
+          onValidChange={(fieldName, isValid) => {
+            if (!isValid) {
+              setErrorFields((oldValue) => [...oldValue, fieldName]);
+            } else {
+              setErrorFields((errorFields) =>
+                errorFields.filter((errorField) => errorField !== fieldName)
+              );
+            }
+          }}
+          onChange={(value) => setPassword(value)}
+          field={{
+            fieldName: "Password",
+            value: password,
+            required: true,
+            fieldProperty: {
+              type: "password",
+            },
+          }}
+        />
+        <Button
+          style={{
+            height: "40px",
+            borderRadius: "5px",
+            width: "90%",
+            background: "#5865f2",
+            border: "none",
+            color: "white",
+            fontWeight: 700,
+            fontSize: "15px",
+            marginTop: "15px",
+          }}
+          disabled={errorFields.length > 0}
+        >
+          Login
+        </Button>
         <LinkText>
           <span>Need an account?</span>{" "}
           <span onClick={() => router.push("/register")}>Register</span>

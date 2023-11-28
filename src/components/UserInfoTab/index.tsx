@@ -13,7 +13,7 @@ import UserDetailsPopup from "./userDetailsPopup";
 const Container = styled.div`
   position: absolute;
   height: 55px;
-  width: calc((100% - 70px) * 0.18);
+  width: calc((100% - 70px) * 0.165);
   background: #232428;
   bottom: 0;
   left: 70px;
@@ -24,7 +24,7 @@ const Container = styled.div`
 `;
 
 const Left = styled.div`
-  width: 55%;
+  width: 60%;
   height: 100%;
   display: flex;
   flex-flow: row wrap;
@@ -94,8 +94,8 @@ const Right = styled.div`
   align-items: center;
   height: 100%;
   flex: 1;
-  gap: 4px;
-  padding-left: 4px;
+  gap: 8px;
+  padding-left: 6px;
   box-sizing: border-box;
   svg {
     height: 21px;
@@ -115,13 +115,15 @@ const UserInfoTab = () => {
   return (
     <Container>
       <Left onClick={() => setOpenPopup(!isOpenPopup)}>
-        <Image
-          src={userInfo?.avatar ?? ""}
-          alt="user-avatar"
-          width={32}
-          height={32}
-          style={{ borderRadius: "50%" }}
-        />
+        {userInfo?.avatar && (
+          <Image
+            src={userInfo.avatar}
+            alt="user-avatar"
+            width={32}
+            height={32}
+            style={{ borderRadius: "50%" }}
+          />
+        )}
         <UserInfo>
           <span>{userInfo?.name + "asdddddddd" ?? ""}</span>
           <span>{userInfo?.username ?? ""}</span>

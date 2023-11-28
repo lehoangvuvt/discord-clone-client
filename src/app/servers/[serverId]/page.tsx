@@ -1,16 +1,33 @@
 "use client";
 
-import useVoiceChat from "@/app/hooks/useVoiceChat";
 import AudioItem from "@/components/AudioItem";
 import MessageItem from "@/components/MessageItem";
+import Popup from "@/components/Popup";
+import Tree from "@/components/Tree";
+import useVoiceChat from "@/hooks/useVoiceChat";
+import useChannels from "@/react-query/hooks/useChannels";
+import useMessageHistory from "@/react-query/hooks/useMessageHistory";
+import useNewMessages from "@/react-query/hooks/useNewMessages";
+import { setChannelId } from "@/redux/slices/appSlice";
 import { RootState } from "@/redux/store";
 import { APIService } from "@/services/ApiService";
 import { socket } from "@/services/socket";
-import { IChannel, IMessage, IUploadFile, IUserInfo } from "@/types/api.type";
+import {
+  IChannel,
+  IGetMessageHistoryResponse,
+  IMessage,
+  IUploadFile,
+  IUserInfo,
+} from "@/types/api.type";
 import { getBase64FromFile } from "@/utils/file.utils";
 import { getRandomInt } from "@/utils/number.utils";
-import { DeleteFilled, PlusCircleFilled } from "@ant-design/icons";
+import {
+  DeleteFilled,
+  PlusCircleFilled,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { VolumeUp, VolumeMute } from "@mui/icons-material";
+import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
 import Image from "next/image";
 import {
@@ -21,7 +38,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -36,7 +53,7 @@ const Container = styled.div`
 `;
 
 const Left = styled.div`
-  width: 18%;
+  width: 16.5%;
   height: 100%;
   background: #2b2d31;
   color: white;
@@ -56,13 +73,12 @@ const ChannelItem = styled.div`
   color: white;
   font-weight: 500;
   box-sizing: border-box;
-  font-size: 15px;
+  font-size: 14px;
   padding: 5px 10px;
   display: flex;
   flex-flow: row wrap;
   align-items: center;
   cursor: pointer;
-  margin-left: 10px;
   margin-right: 10px;
   border-radius: 4px;
   color: rgba(255, 255, 255, 0.7);
@@ -79,14 +95,13 @@ const ChannelItem = styled.div`
     background: rgba(255, 255, 255, 0.15);
   }
   svg {
-    margin-right: 5px;
     margin-left: -5px;
     height: 21px;
   }
 `;
 
 const MessagesContainer = styled.div`
-  width: 69%;
+  width: 68.5%;
   height: 100%;
   display: flex;
   flex-flow: column wrap;
@@ -104,6 +119,7 @@ const MessagesHolder = styled.div`
   overflow-y: auto;
   overflow-x: hidden;
   gap: 10px;
+  padding-top: 40px;
   &::-webkit-scrollbar {
     width: 10px;
     background: rgba(0, 0, 0, 0.125);
@@ -175,7 +191,7 @@ const EmojiSelector = styled.div<{ $isOpenEmoji: boolean }>`
 `;
 
 const OnlineUsersContainer = styled.div`
-  width: 13%;
+  width: 15%;
   height: 100%;
   background: #2b2d31;
   display: flex;
@@ -276,41 +292,6 @@ const FilesContainer = styled.div`
   padding-top: 10px;
 `;
 
-const FileItem = styled.div`
-  width: calc(25% - 10px);
-  height: 200px;
-  background: #2b2d31;
-  border-radius: 4px;
-  display: flex;
-  flex-flow: column wrap;
-  align-items: center;
-  padding-top: 10px;
-`;
-
-const FileImageContainer = styled.div`
-  width: 92%;
-  height: 70%;
-  margin-top: 7%;
-  position: relative;
-`;
-
-const FileName = styled.div`
-  width: 100%;
-  flex: 1;
-  font-weight: 200;
-  color: white;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 5px;
-  max-width: 30ch;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis !important;
-  padding-bottom: 10px;
-`;
-
 const UploadItem = styled.div`
   width: 23%;
   height: 150px;
@@ -343,16 +324,34 @@ const UploadItemController = styled.div`
 const ChannelTypeTitle = styled.div`
   width: 100%;
   padding: 10px 10px;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
   letter-spacing: 0.5px;
+  pointer-events: none;
+`;
+
+const NewMsgNotify = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 97.5%;
+  margin-left: 1%;
+  padding: 8px 10px;
+  background: #5663e9;
+  color: white;
+  z-index: 50;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 0px 0px 6px 6px;
 `;
 
 export default function Server({ params }: { params: any }) {
-  const [channels, setChannels] = useState<IChannel[]>([]);
-  const [currentChannelId, setCurrentChannelId] = useState("");
+  const dispatch = useDispatch();
+  const currentConnection = useSelector(
+    (state: RootState) => state.app.currentConnection
+  );
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
   const [messageHistory, setMessageHistory] = useState<IMessage[]>([]);
   const messageHolderRef = useRef<HTMLDivElement | null>(null);
@@ -361,56 +360,108 @@ export default function Server({ params }: { params: any }) {
   const msgInputRef = useRef<HTMLDivElement | null>(null);
   const [isOpenEmoji, setOpenEmoji] = useState(false);
   const [attachments, setAttachments] = useState<IUploadFile[]>([]);
-  const { startVoice, inVoiceChannel, setInVoiceChannel } =
-    useVoiceChat(socket);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [openCreateChannelPopup, setOpenCreateChannelPopup] = useState(false);
+  const { channels, isLoading: loadingChannels } = useChannels(params.serverId);
+  const { data: useMessageHistoryData } = useMessageHistory(
+    currentConnection.channelId,
+    currentPage,
+    20
+  );
+  const {
+    start: startVoice,
+    stop: stopVoice,
+    inVoiceChannel,
+    setInVoiceChannel,
+  } = useVoiceChat(socket);
+  const [lastFetchMessageDT, setLastFetchMessageDT] = useState<string | null>(
+    null
+  );
+  const [fetchingNewMsg, setFetchingNewMsg] = useState(false);
+  const {
+    data: useNewMessageData,
+    isError,
+    isLoading,
+  } = useNewMessages(
+    currentConnection.channelId,
+    lastFetchMessageDT,
+    fetchingNewMsg
+  );
 
   useEffect(() => {
-    if (params && params.serverId) {
-      const getServerChannels = async () => {
-        if (params.serverId !== "%40me") {
-          const response = await axios({
-            url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/servers/get-channels/${params.serverId}`,
-            method: "GET",
-          });
-          const channels: IChannel[] = response.data;
-          setChannels(channels);
-        }
-      };
-      getServerChannels();
-      setEmoId(getRandomInt(1, 16));
+    return () => {
+      stopVoice(params.serverId);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (msgInputRef && msgInputRef.current) {
+      msgInputRef.current.innerHTML = "";
     }
-  }, [params]);
+    if (userInfo && currentConnection.channelId) {
+      const data = {
+        _id: userInfo._id,
+        channelId: currentConnection.channelId,
+      };
+      if (socket) {
+        socket.emit("joinChannel", JSON.stringify(data));
+        socket.on("joinedChannel", handleJoinedChannel);
+      }
+    }
+    return () => {
+      if (currentConnection.channelId && socket) {
+        removeAllSocketListener();
+      }
+    };
+  }, [currentConnection.channelId]);
+
+  const removeAllSocketListener = () => {
+    if (currentConnection.channelId) {
+      const channelId = currentConnection.channelId;
+      socket.off("joinedChannel", handleJoinedChannel);
+      socket.off(`receiveOnlineChannel=${channelId}`, getUsersByIds);
+      setMessageHistory([]);
+      setCurrentPage(1);
+      setHasMore(true);
+    }
+  };
+
+  useEffect(() => {
+    setMessageHistory([]);
+    setCurrentPage(1);
+    setHasMore(true);
+  }, [currentConnection.server]);
+
+  const handleJoinedChannel = (channelId: string) => {
+    socket.on(`receiveOnlineChannel=${channelId}`, getUsersByIds);
+  };
+
+  useEffect(() => {
+    if (lastFetchMessageDT && currentConnection.channelId) {
+      socket.on(
+        `receiveMessageChannel=${currentConnection.channelId}`,
+        getNewMessagesSinceDT
+      );
+      return () => {
+        socket.off(
+          `receiveMessageChannel=${currentConnection.channelId}`,
+          getNewMessagesSinceDT
+        );
+      };
+    }
+  }, [lastFetchMessageDT, currentConnection.channelId]);
 
   const handleSelectChannel = async (channel: IChannel) => {
     setAttachments([]);
     setMessageHistory([]);
     setOnineUsers([]);
-    if (msgInputRef && msgInputRef.current) {
-      msgInputRef.current.innerHTML = "";
-    }
-    if (userInfo) {
-      const data = {
-        _id: userInfo._id,
-        channelId: channel._id,
-      };
-      if (socket) {
-        getMessageHistory(channel._id);
-        socket.emit("joinChannel", JSON.stringify(data));
-        socket.on("joinedChannel", (channelId) => {
-          setCurrentChannelId(channelId);
-          socket.on(`receiveMessageChannel=${channelId}`, (message: string) => {
-            getMessageHistory(channelId);
-          });
-          socket.on(`receiveOnlineChannel=${channelId}`, (data: string) => {
-            const userIds = JSON.parse(data);
-            getUsersByIds(userIds);
-          });
-        });
-      }
-    }
+    dispatch(setChannelId(channel._id));
   };
 
-  const getUsersByIds = async (userIds: string[]) => {
+  const getUsersByIds = async (data: string) => {
+    const userIds = JSON.parse(data);
     const url = `${process.env.NEXT_PUBLIC_BASE_API_URL}/users/get-users-by-ids`;
     const response = await axios({
       url,
@@ -423,13 +474,46 @@ export default function Server({ params }: { params: any }) {
     }
   };
 
-  const getMessageHistory = async (channelId: string) => {
-    const response = await axios({
-      url: `${process.env.NEXT_PUBLIC_BASE_API_URL}/channels/message-history/${channelId}`,
-    });
-    if (response.status === 200) {
-      const messageHistory: IMessage[] = response.data;
-      setMessageHistory(messageHistory);
+  const getNewMessagesSinceDT = async () => {
+    setFetchingNewMsg(true);
+  };
+
+  useEffect(() => {
+    if (useNewMessageData && useNewMessageData.data.length > 0) {
+      const { data } = useNewMessageData;
+      setMessageHistory([...messageHistory, ...data]);
+      setLastFetchMessageDT(data[data.length - 1].createdAt);
+      setFetchingNewMsg(false);
+    }
+  }, [useNewMessageData]);
+
+  useEffect(() => {
+    if (useMessageHistoryData) {
+      const { currentPage, data, hasMore, totalPage } = useMessageHistoryData;
+      if (data.length > 0) {
+        const msgHistory = [...data, ...messageHistory];
+        setMessageHistory(msgHistory);
+        setHasMore(hasMore);
+        setLastFetchMessageDT(msgHistory[msgHistory.length - 1].createdAt);
+      }
+    }
+  }, [useMessageHistoryData]);
+
+  useEffect(() => {
+    if (messageHistory?.length > 0 && lastFetchMessageDT) {
+      if (
+        messageHistory[messageHistory.length - 1].createdAt !==
+        lastFetchMessageDT
+      ) {
+      }
+    }
+  }, [messageHistory, lastFetchMessageDT]);
+
+  const handleScroll = (e: any) => {
+    if (messageHolderRef && messageHolderRef.current) {
+      if (messageHolderRef.current.scrollTop === 0) {
+        setCurrentPage((value) => value + 1);
+      }
     }
   };
 
@@ -455,7 +539,7 @@ export default function Server({ params }: { params: any }) {
             section: attachment.section,
             type: attachment.type,
           });
-          if (response.data) {
+          if (response.status === "Success") {
             fileIds.push(response.data._id);
           }
         });
@@ -463,7 +547,7 @@ export default function Server({ params }: { params: any }) {
         socket.emit(
           "send",
           JSON.stringify({
-            channelId: currentChannelId,
+            channelId: currentConnection.channelId,
             message: innerHTML,
             userId: userInfo._id,
             fileIds: fileIds,
@@ -480,11 +564,11 @@ export default function Server({ params }: { params: any }) {
 
   useEffect(() => {
     if (messageHistory && messageHistory.length > 0) {
-      if (messageHolderRef && messageHolderRef.current)
-        messageHolderRef.current.scrollTo({
-          top: messageHolderRef.current.scrollHeight,
-          behavior: "smooth",
-        });
+      // if (messageHolderRef && messageHolderRef.current)
+      //   messageHolderRef.current.scrollTo({
+      //     top: messageHolderRef.current.scrollHeight,
+      //     behavior: "smooth",
+      //   });
     }
   }, [messageHistory]);
 
@@ -611,41 +695,81 @@ export default function Server({ params }: { params: any }) {
     <Container>
       <Left>
         <ChannelsContainer>
-          <ChannelTypeTitle>Text channels</ChannelTypeTitle>
-          {channels &&
-            channels.length > 0 &&
-            channels.map((channel) => (
-              <ChannelItem
-                className={
-                  currentChannelId == channel._id ? "selected" : "not-selected"
-                }
-                onClick={() => handleSelectChannel(channel)}
-                key={channel._id}
-              >
-                <span>#</span>
-                <span>{channel.name}</span>
-              </ChannelItem>
-            ))}
-          <ChannelTypeTitle>Voice channels</ChannelTypeTitle>
-          <ChannelItem
-            className={inVoiceChannel ? "selected" : "not-selected"}
-            onClick={() => {
-              if (!inVoiceChannel) {
-                startVoice();
-              } else {
-                setInVoiceChannel(false);
-              }
-            }}
-          >
-            {inVoiceChannel ? <VolumeUp /> : <VolumeMute />}
-            General
-          </ChannelItem>
+          {!loadingChannels && channels && (
+            <Tree
+              data={[
+                {
+                  title: <ChannelTypeTitle>Text channels</ChannelTypeTitle>,
+                  treeItemRightContent: (
+                    <AddIcon
+                      onClick={() => setOpenCreateChannelPopup(true)}
+                      style={{
+                        fontSize: "18px",
+                        marginRight: "10px",
+                        marginTop: "2px",
+                        color: "rgba(255,255,255,0.6)",
+                        cursor: "pointer",
+                      }}
+                    />
+                  ),
+                  childs: channels.map((channel) => {
+                    return {
+                      title: (
+                        <ChannelItem
+                          className={
+                            currentConnection.channelId == channel._id
+                              ? "selected"
+                              : "not-selected"
+                          }
+                          onClick={() => handleSelectChannel(channel)}
+                          key={channel._id}
+                        >
+                          <span>#</span>
+                          <span>{channel.name}</span>
+                        </ChannelItem>
+                      ),
+                    };
+                  }),
+                },
+                {
+                  title: <ChannelTypeTitle>Voice channels</ChannelTypeTitle>,
+                  childs: [
+                    {
+                      title: (
+                        <ChannelItem
+                          className={
+                            inVoiceChannel ? "selected" : "not-selected"
+                          }
+                          onClick={() => {
+                            if (!inVoiceChannel) {
+                              startVoice(params.serverId);
+                            } else {
+                              setInVoiceChannel(false);
+                            }
+                          }}
+                        >
+                          {inVoiceChannel ? <VolumeUp /> : <VolumeMute />}
+                          General
+                        </ChannelItem>
+                      ),
+                    },
+                  ],
+                },
+              ]}
+            />
+          )}
         </ChannelsContainer>
       </Left>
-      {currentChannelId && (
+      {currentConnection?.channelId && (
         <>
-          <MessagesContainer>
-            <MessagesHolder ref={messageHolderRef}>
+          <MessagesContainer ref={messagesContainerRef}>
+            {lastFetchMessageDT && (
+              <NewMsgNotify>
+                1 new messages since{" "}
+                {new Date(lastFetchMessageDT).toDateString()}
+              </NewMsgNotify>
+            )}
+            <MessagesHolder onScroll={handleScroll} ref={messageHolderRef}>
               {messageHistory &&
                 messageHistory.length > 0 &&
                 messageHistory.map((message, i) => (
@@ -711,7 +835,7 @@ export default function Server({ params }: { params: any }) {
               onlineUsers.map((oUser) => (
                 <OnlineUserItem key={oUser._id}>
                   <Image
-                    src={oUser.avatar}
+                    src={oUser?.avatar ?? ""}
                     alt="user-avatar"
                     width={40}
                     height={40}
@@ -734,6 +858,12 @@ export default function Server({ params }: { params: any }) {
           />
         </>
       )}
+      <Popup
+        isOpen={openCreateChannelPopup}
+        closePopup={() => setOpenCreateChannelPopup(false)}
+      >
+        <h1>asddsd</h1>
+      </Popup>
     </Container>
   );
 }

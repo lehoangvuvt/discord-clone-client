@@ -1,11 +1,11 @@
 "use client";
 
+import Button from "@/components/Button";
+import InputField from "@/components/InputField";
 import {
   Container,
-  FieldContainer,
   Form,
   LinkText,
-  SubmitButton,
 } from "@/components/LoginRegister/components";
 import { APIService } from "@/services/ApiService";
 import { IRegisterData } from "@/types/api.type";
@@ -18,6 +18,7 @@ const Login = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
+  const [errorFields, setErrorFields] = useState<string[]>([]);
 
   const handleSubmit = async (e: FormEvent<HTMLElement>) => {
     e.preventDefault();
@@ -27,7 +28,7 @@ const Login = () => {
       name,
     };
     const response = await APIService.register(data);
-    if (response.data) {
+    if (response.status === "Success") {
       router.push("/login");
     } else {
       alert("Error");
@@ -37,42 +38,117 @@ const Login = () => {
   return (
     <Container>
       <Form onSubmit={handleSubmit}>
-        <FieldContainer>
-          <span>Username</span>
-          <input
-            required
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </FieldContainer>
-        <FieldContainer>
-          <span>Display name</span>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </FieldContainer>
-        <FieldContainer>
-          <span>Password</span>
-          <input
-            required
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </FieldContainer>
-        <FieldContainer>
-          <span>Confirm password</span>
-          <input
-            required
-            type="password"
-            value={rePassword}
-            onChange={(e) => setRePassword(e.target.value)}
-          />
-        </FieldContainer>
-        <SubmitButton type="submit">Register</SubmitButton>
+        <InputField
+          onValidChange={(fieldName, isValid) => {
+            if (!isValid) {
+              setErrorFields([...errorFields, fieldName]);
+            } else {
+              setErrorFields((errorFields) =>
+                errorFields.filter((errorField) => errorField !== fieldName)
+              );
+            }
+          }}
+          onChange={(value) => setUsername(value)}
+          field={{
+            fieldName: "Username",
+            required: true,
+            value: username,
+            fieldProperty: {
+              type: "text",
+              validateRules: {
+                minLength: 5,
+              },
+            },
+          }}
+        />
+
+        <InputField
+          onValidChange={(fieldName, isValid) => {
+            if (!isValid) {
+              setErrorFields([...errorFields, fieldName]);
+            } else {
+              setErrorFields((errorFields) =>
+                errorFields.filter((errorField) => errorField !== fieldName)
+              );
+            }
+          }}
+          onChange={(value) => setName(value)}
+          field={{
+            fieldName: "Display name",
+            value: name,
+            fieldProperty: {
+              type: "text",
+            },
+          }}
+        />
+
+        <InputField
+          onValidChange={(fieldName, isValid) => {
+            if (!isValid) {
+              setErrorFields([...errorFields, fieldName]);
+            } else {
+              setErrorFields((errorFields) =>
+                errorFields.filter((errorField) => errorField !== fieldName)
+              );
+            }
+          }}
+          onChange={(value) => setPassword(value)}
+          field={{
+            fieldName: "Password",
+            value: password,
+            required: true,
+            fieldProperty: {
+              type: "password",
+              validateRules: {
+                minLength: 5,
+              },
+            },
+          }}
+        />
+
+        <InputField
+          onValidChange={(fieldName, isValid) => {
+            if (!isValid) {
+              setErrorFields([...errorFields, fieldName]);
+            } else {
+              setErrorFields((errorFields) =>
+                errorFields.filter((errorField) => errorField !== fieldName)
+              );
+            }
+          }}
+          onChange={(value) => setRePassword(value)}
+          field={{
+            fieldName: "Repeat password",
+            value: rePassword,
+            required: true,
+            fieldProperty: {
+              type: "password",
+              validateRules: {
+                equalValue: {
+                  value: password,
+                  fieldName: "password",
+                },
+              },
+            },
+          }}
+        />
+
+        <Button
+          style={{
+            height: "40px",
+            borderRadius: "5px",
+            width: "90%",
+            background: "#5865f2",
+            border: "none",
+            color: "white",
+            fontWeight: 700,
+            fontSize: "15px",
+            marginTop: "15px",
+          }}
+          disabled={errorFields.length > 0}
+        >
+          Register
+        </Button>
         <LinkText>
           <span>Already have an account?</span>{" "}
           <span onClick={() => router.push("/login")}>Login</span>

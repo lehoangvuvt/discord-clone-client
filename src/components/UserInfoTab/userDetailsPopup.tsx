@@ -11,6 +11,7 @@ import { APIService } from "@/services/ApiService";
 import { useDispatch } from "react-redux";
 import { setUserInfo } from "@/redux/slices/appSlice";
 import { LoadingOutlined } from "@ant-design/icons";
+import Button from "../Button";
 
 const Container = styled.div`
   position: fixed;
@@ -74,13 +75,13 @@ const UserDetailsPopupRightTitle = styled.div`
   }
 `;
 
-const FieldContainer = styled.div<{ withBorder: boolean }>`
+const FieldContainer = styled.div<{ $withborder: boolean }>`
   width: 50%;
   display: flex;
   flex-flow: column wrap;
   margin-bottom: 30px;
   border-bottom: ${(props) =>
-    props.withBorder ? "1px solid rgba(255, 255, 255, 0.1)" : "none"};
+    props.$withborder ? "1px solid rgba(255, 255, 255, 0.1)" : "none"};
   padding-bottom: 25px;
 `;
 
@@ -110,7 +111,7 @@ const FieldInput = styled.input`
   }
 `;
 
-const AvatarImage = styled.div`
+const AvatarImage = styled.label`
   margin-top: 30px;
   width: 140px;
   height: 140px;
@@ -182,34 +183,6 @@ const SaveInfoContainer = styled.div`
   }
 `;
 
-const SaveButton = styled.button`
-  padding: 0px 20px;
-  background: #248046;
-  color: white;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 33px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: filter 0.1s ease;
-  border: none;
-  outline: none;
-  font-weight: 600;
-  &:hover {
-    filter: brightness(80%);
-  }
-  &.loading {
-    filter: brightness(80%);
-    cursor: progress;
-  }
-  &.disabled {
-    cursor: not-allowed;
-    filter: brightness(80%);
-  }
-`;
-
 const ResetButton = styled.p`
   color: rgba(255, 255, 255, 0.8);
   font-size: 14px;
@@ -250,7 +223,6 @@ const UserDetailsPopup = ({
   const [base64UploadFile, setBase64UploadFile] = useState<string | null>(null);
   const [isUpdating, setUpdating] = useState(false);
   const [canSave, setCanSave] = useState(false);
-  const uploadImgRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch();
 
   const handleChangeField = (
@@ -289,7 +261,7 @@ const UserDetailsPopup = ({
         type,
         section,
       });
-      if (uploadImgRes.data) {
+      if (uploadImgRes.status === "Success") {
         path = uploadImgRes.data.path;
       } else {
         alert("error upload avatar");
@@ -303,7 +275,7 @@ const UserDetailsPopup = ({
       data.avatar = path;
     }
     const response = await APIService.updateUserInfo(data);
-    if (response.data) {
+    if (response.status === "Success") {
       dispatch(setUserInfo(response.data));
     }
     setBase64UploadFile(null);
@@ -350,7 +322,7 @@ const UserDetailsPopup = ({
                 color="inherit"
               />
             </UserDetailsPopupRightTitle>
-            <FieldContainer withBorder>
+            <FieldContainer $withborder>
               <FieldTitle>USERNAME</FieldTitle>
               <FieldInput
                 className="readonly"
@@ -359,7 +331,7 @@ const UserDetailsPopup = ({
                 value={cloneUserInfo?.username}
               />
             </FieldContainer>
-            <FieldContainer withBorder>
+            <FieldContainer $withborder>
               <FieldTitle>DISPLAY NAME</FieldTitle>
               <FieldInput
                 type="text"
@@ -369,15 +341,10 @@ const UserDetailsPopup = ({
                 }
               />
             </FieldContainer>
-            <FieldContainer withBorder={false}>
+            <FieldContainer $withborder={false}>
               <FieldTitle>AVATAR</FieldTitle>
 
-              <AvatarImage
-                onClick={() => {
-                  if (!uploadImgRef || !uploadImgRef.current) return;
-                  uploadImgRef.current.click();
-                }}
-              >
+              <AvatarImage htmlFor="upload-file=input">
                 <UploadButton>
                   <EditIcon
                     fontSize="inherit"
@@ -385,7 +352,9 @@ const UserDetailsPopup = ({
                   />
                 </UploadButton>
                 <Image
-                  src={base64UploadFile ? base64UploadFile : userInfo.avatar}
+                  src={
+                    base64UploadFile ? base64UploadFile : userInfo?.avatar ?? ""
+                  }
                   alt="user-avatar"
                   fill
                   style={{
@@ -397,20 +366,21 @@ const UserDetailsPopup = ({
                 <input
                   style={{ display: "none" }}
                   type="file"
-                  ref={uploadImgRef}
+                  name="upload-file=input"
+                  id="upload-file=input"
                   onChange={(e) => handleOnChangeFile(e)}
                 />
               </AvatarImage>
             </FieldContainer>
             <SaveInfoContainer className={canSave ? "show" : "hidden"}>
               <ResetButton onClick={() => handleReset()}>Reset</ResetButton>
-              <SaveButton
+              <Button
+                loading={isUpdating}
                 disabled={!canSave}
-                className={!canSave ? "disabled" : isUpdating ? "loading" : ""}
                 onClick={() => handleUpdateUserInfo()}
               >
                 {isUpdating ? "Saving..." : "Save Changes"}
-              </SaveButton>
+              </Button>
             </SaveInfoContainer>
           </UserDetailsPopupRight>
         </>

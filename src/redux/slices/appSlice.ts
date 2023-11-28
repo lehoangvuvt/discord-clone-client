@@ -1,6 +1,6 @@
-import { IUserInfo } from "@/types/api.type";
+import { IChannel, IUserInfo } from "@/types/api.type";
 import { createSlice } from "@reduxjs/toolkit";
-import { Socket } from "socket.io-client";
+import { IServer } from "@/types/api.type";
 
 export type Palette = {
   backgroundColor: string;
@@ -19,6 +19,10 @@ const initialState: {
     mute: boolean;
     volumeState: number;
   };
+  currentConnection: {
+    server: IServer | null;
+    channelId: string | null;
+  };
 } = {
   theme: {
     name: "LIGHT",
@@ -33,6 +37,10 @@ const initialState: {
   userVoiceState: {
     mute: false,
     volumeState: 1,
+  },
+  currentConnection: {
+    server: null,
+    channelId: null,
   },
 };
 
@@ -66,9 +74,6 @@ const appSlice = createSlice({
       localStorage.setItem("LANG", action.payload);
       state.lang = action.payload;
     },
-    setChannelId: (state, action) => {
-      state.channelId = action.payload;
-    },
     setUserInfo: (state, action) => {
       state.userInfo = action.payload;
     },
@@ -79,15 +84,22 @@ const appSlice = createSlice({
       state.userVoiceState.volumeState =
         state.userVoiceState.volumeState == 1 ? 0 : 1;
     },
+    setServer: (state, action) => {
+      state.currentConnection.server = action.payload;
+    },
+    setChannelId: (state, action) => {
+      state.currentConnection.channelId = action.payload;
+    },
   },
 });
 
 export const {
   setTheme,
   setLang,
-  setChannelId,
   setUserInfo,
   toggleMute,
   toggleVolumeState,
+  setServer,
+  setChannelId,
 } = appSlice.actions;
 export default appSlice.reducer;

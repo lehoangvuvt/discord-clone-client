@@ -138,7 +138,7 @@ const MessageItem = ({ data }: { data: IMessage }) => {
     <Container>
       <MessageItemLeft>
         <Image
-          src={data.userDetails.avatar}
+          src={data?.userDetails?.avatar ?? ""}
           alt="user-avatar"
           fill
           style={{ objectFit: "cover", objectPosition: "center" }}

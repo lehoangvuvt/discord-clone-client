@@ -45,12 +45,12 @@ const ProgressBar = styled.div`
   }
 `;
 
-const CurrentProgressBar = styled.div<{ currentWidth: number }>`
+const CurrentProgressBar = styled.div<{ $currentWidth: number }>`
   position: relavite;
   top: 0;
   left: 0;
   height: 100%;
-  width: ${(props) => props.currentWidth}%;
+  width: ${(props) => props.$currentWidth}%;
   background: #651fff;
 `;
 
@@ -190,7 +190,7 @@ export default function AudioItem({
                 );
               }}
             >
-              <CurrentProgressBar currentWidth={progress} />
+              <CurrentProgressBar $currentWidth={progress} />
             </ProgressBar>
           </Player>
         </>

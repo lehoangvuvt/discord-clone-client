@@ -7,30 +7,44 @@ import {
   IAttachmentResponse,
   IUploadFile,
   IUploadFileResponse,
-  UpdateUserInfo,
+  IUpdateUserInfo,
+  ICreateServerData,
+  IServer,
+  IMessage,
+  IGetMessageHistoryResponse,
+  IChannel,
+  IUserServer,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
 
 export const APIService = {
   async login(data: ILoginData): Promise<IApiResponse<IUserInfo>> {
-    const response = await baseAxios.post<ILoginData, AxiosResponse<IUserInfo>>(
-      "/users/login",
-      data,
-      {
+    try {
+      const response = await baseAxios.post<
+        ILoginData,
+        AxiosResponse<IUserInfo>
+      >("/users/login", data, {
         withCredentials: true,
-      }
-    );
-    if (response.status === 200) {
-      return {
-        data: response.data,
-      };
-    } else {
-      return {
-        error: {
+      });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
           errorCode: response.status,
           errorMessage: "Wrong username or password",
-        },
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "Wrong username or password",
       };
     }
   },
@@ -41,14 +55,15 @@ export const APIService = {
     >("/users/register", data);
     if (response.status === 200) {
       return {
+        status: "Success",
+        statusCode: 200,
         data: response.data,
       };
     } else {
       return {
-        error: {
-          errorCode: response.status,
-          errorMessage: "Cannot register",
-        },
+        status: "Error",
+        errorCode: response.status,
+        errorMessage: "Cannot register",
       };
     }
   },
@@ -61,14 +76,15 @@ export const APIService = {
     >("/files/upload", data);
     if (response.status === 200) {
       return {
+        status: "Success",
         data: response.data,
+        statusCode: response.status,
       };
     } else {
       return {
-        error: {
-          errorCode: response.status,
-          errorMessage: `Cannot upload file ${data.name}`,
-        },
+        status: "Error",
+        errorCode: response.status,
+        errorMessage: `Cannot upload file ${data.name}`,
       };
     }
   },
@@ -81,14 +97,15 @@ export const APIService = {
     >(`/attachments/${attachmentId}`);
     if (response.status === 200) {
       return {
+        status: "Success",
         data: response.data,
+        statusCode: response.status,
       };
     } else {
       return {
-        error: {
-          errorCode: response.status,
-          errorMessage: `Cannot get attachment ${attachmentId}`,
-        },
+        status: "Error",
+        errorCode: response.status,
+        errorMessage: `Cannot get attachment ${attachmentId}`,
       };
     }
   },
@@ -100,22 +117,22 @@ export const APIService = {
       );
       if (response.status === 200) {
         return {
+          status: "Success",
+          statusCode: 200,
           data: response.data,
         };
       } else {
         return {
-          error: {
-            errorCode: response.status,
-            errorMessage: "Athentication failed",
-          },
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "Athentication failed",
         };
       }
     } catch (e) {
       return {
-        error: {
-          errorCode: 401,
-          errorMessage: "Athentication failed",
-        },
+        status: "Error",
+        errorCode: 401,
+        errorMessage: "Athentication failed",
       };
     }
   },
@@ -127,27 +144,27 @@ export const APIService = {
       );
       if (response.status === 200) {
         return {
+          status: "Success",
+          statusCode: 200,
           data: response.data,
         };
       } else {
         return {
-          error: {
-            errorCode: response.status,
-            errorMessage: "Get access token failed",
-          },
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "Get access token failed",
         };
       }
     } catch (e) {
       return {
-        error: {
-          errorCode: 401,
-          errorMessage: "Get access token failed",
-        },
+        status: "Error",
+        errorCode: 401,
+        errorMessage: "Get access token failed",
       };
     }
   },
   async updateUserInfo(
-    userInfo: UpdateUserInfo
+    userInfo: IUpdateUserInfo
   ): Promise<IApiResponse<IUserInfo>> {
     try {
       const response = await baseAxios.post<null, AxiosResponse<IUserInfo>>(
@@ -157,22 +174,165 @@ export const APIService = {
       );
       if (response.status === 200) {
         return {
+          status: "Success",
+          statusCode: 200,
           data: response.data,
         };
       } else {
         return {
-          error: {
-            errorCode: response.status,
-            errorMessage: "Update user info failed",
-          },
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "Update user info failed",
         };
       }
     } catch (e) {
       return {
-        error: {
-          errorCode: 400,
-          errorMessage: "Update user info failed",
-        },
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "Update user info failed",
+      };
+    }
+  },
+  async createServer(data: ICreateServerData): Promise<IApiResponse<IServer>> {
+    try {
+      const response = await baseAxios.post<
+        ICreateServerData,
+        AxiosResponse<IServer>
+      >(`/servers/create`, data, { withCredentials: true });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "Create server failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "Create server failed",
+      };
+    }
+  },
+  async getMessageHistory(
+    channelId: string,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<IApiResponse<IGetMessageHistoryResponse>> {
+    try {
+      const response = await baseAxios.get<
+        null,
+        AxiosResponse<IGetMessageHistoryResponse>
+      >(
+        `/channels/message-history/channelId=${channelId}&page=${page}&limit=${limit}`
+      );
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "Get message history failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "Get message history failed",
+      };
+    }
+  },
+  async getNewMessagesSinceDT(
+    channelId: string,
+    datetime: string
+  ): Promise<IApiResponse<IGetMessageHistoryResponse>> {
+    try {
+      const response = await baseAxios.get<
+        null,
+        AxiosResponse<IGetMessageHistoryResponse>
+      >(`/channels/new-messages/channelId=${channelId}&datetime=${datetime}`);
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "Get message history failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "Get message history failed",
+      };
+    }
+  },
+  async getServerChannels(serverId: string): Promise<IApiResponse<IChannel[]>> {
+    try {
+      const response = await baseAxios.get<null, AxiosResponse<IChannel[]>>(
+        `/servers/get-channels/${serverId}`
+      );
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "Get server channels failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "Get server channels failed",
+      };
+    }
+  },
+  async leaveServer(serverId: string): Promise<IApiResponse<IUserServer>> {
+    try {
+      const response = await baseAxios.delete<null, AxiosResponse<IUserServer>>(
+        `/servers/leave/serverId=${serverId}`,
+        { withCredentials: true }
+      );
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "Leave server failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "Leave server failed",
       };
     }
   },

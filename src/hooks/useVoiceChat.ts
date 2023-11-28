@@ -2,14 +2,13 @@
 
 import { RootState } from "@/redux/store";
 import { Socket } from "@/services/socket";
-import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 const useVoiceChat = (socket: Socket) => {
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const [serverId, setServerId] = useState<string | null>(null);
   const [inVoiceChannel, setInVoiceChannel] = useState(false);
-  const params = useParams();
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
@@ -30,20 +29,16 @@ const useVoiceChat = (socket: Socket) => {
     [userInfo]
   );
 
-  const startVoice = () => {
+  const start = (serverId: string) => {
     if (!userInfo || typeof window === undefined) return;
-
-    socket.on(`receiveVoiceServer=${params.serverId}`, handleOnReceiveVoice);
+    setServerId(serverId);
+    socket.on(`receiveVoiceServer=${serverId}`, handleOnReceiveVoice);
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const mediaRecorder = new MediaRecorder(stream);
       setMediaStream(stream);
       setMediaRecorder(mediaRecorder);
-    });
-  };
 
-  useEffect(() => {
-    if (mediaRecorder && params?.serverId && userInfo && socket) {
       const time = 1000;
       mediaRecorder.start();
 
@@ -66,13 +61,15 @@ const useVoiceChat = (socket: Socket) => {
           const base64String = fileReader.result;
           const data = {
             base64: base64String,
-            serverId: params?.serverId,
+            serverId: serverId,
             userId: userInfo?._id,
           };
           socket.emit("sendVoice", JSON.stringify(data));
         };
 
-        mediaRecorder.start();
+        try {
+          mediaRecorder.start();
+        } catch (ex) {}
 
         setTimeout(function () {
           mediaRecorder.stop();
@@ -81,8 +78,24 @@ const useVoiceChat = (socket: Socket) => {
       setTimeout(function () {
         mediaRecorder.stop();
       }, time);
-    }
-  }, [mediaRecorder, params, userInfo, socket]);
+    });
+  };
+
+  const stop = (serverId: string) => {
+    socket.off(`receiveVoiceServer=${serverId}`);
+    setInVoiceChannel(false);
+    setServerId(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (mediaStream && mediaRecorder) {
+        mediaStream.getAudioTracks().forEach((aTrack) => aTrack.stop());
+        setMediaRecorder(null);
+        setMediaStream(null);
+      }
+    };
+  }, [mediaStream, mediaRecorder]);
 
   useEffect(() => {
     if (!mediaStream) return;
@@ -98,25 +111,27 @@ const useVoiceChat = (socket: Socket) => {
       !mediaRecorder ||
       !mediaStream ||
       !socket ||
-      !params ||
+      !serverId ||
       !handleOnReceiveVoice
     )
       return;
     if (userVoiceSetting.volumeState !== 0) {
-      socket.on(`receiveVoiceServer=${params.serverId}`, handleOnReceiveVoice);
+      socket.on(`receiveVoiceServer=${serverId}`, handleOnReceiveVoice);
     } else {
-      socket.off(`receiveVoiceServer=${params.serverId}`);
+      socket.off(`receiveVoiceServer=${serverId}`);
     }
   }, [
     userVoiceSetting,
     mediaRecorder,
     mediaStream,
-    params,
+    serverId,
     handleOnReceiveVoice,
     socket,
   ]);
+
   return {
-    startVoice,
+    start,
+    stop,
     inVoiceChannel,
     setInVoiceChannel,
   };

@@ -20,7 +20,7 @@ const AuthHandler = () => {
 
     const authentication = async () => {
       const authenticationResponse = await APIService.athentication();
-      if (authenticationResponse.data) {
+      if (authenticationResponse.status === "Success") {
         dispatch(setUserInfo(authenticationResponse.data));
         if (!pathname.includes("/servers")) {
           router.push("/servers/@me");
@@ -28,7 +28,7 @@ const AuthHandler = () => {
       } else {
         const getAccessTokenResponse =
           await APIService.getAccessTokenByRefreshToken();
-        if (getAccessTokenResponse.data) {
+        if (getAccessTokenResponse.status === "Success") {
           dispatch(setUserInfo(getAccessTokenResponse.data));
           router.push("/servers/@me");
         } else {
@@ -40,7 +40,7 @@ const AuthHandler = () => {
     };
 
     authentication();
-  }, [router, pathname, dispatch]);
+  }, []);
 
   const onConnect = () => {};
   const onDisconnect = () => {};

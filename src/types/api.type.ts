@@ -1,14 +1,18 @@
 import { HttpStatusCode } from "axios";
 
-export type IErrorResponse = {
+export type IApiResponseSuccess<T> = {
+  status: "Success";
+  statusCode: HttpStatusCode;
+  data: T;
+};
+
+export type IApiResponseError = {
+  status: "Error";
   errorMessage: string;
   errorCode: HttpStatusCode;
 };
 
-export type IApiResponse<T> = {
-  data?: T;
-  error?: IErrorResponse;
-};
+export type IApiResponse<T> = IApiResponseSuccess<T> | IApiResponseError;
 
 export type ILoginData = {
   username: string;
@@ -49,7 +53,12 @@ export interface IUserInfo extends IBaseData {
   createdServers: IServer[];
 }
 
-export type UpdateUserInfo = {
+export type IUpdateUserInfo = {
+  avatar: string;
+  name: string;
+};
+
+export type ICreateServerData = {
   avatar: string;
   name: string;
 };
@@ -89,4 +98,16 @@ export interface IUploadFileResponse extends IBaseData {
   type: string;
   section: string;
   path: string;
+}
+
+export type IGetMessageHistoryResponse = {
+  totalPage: number;
+  currentPage: number;
+  hasMore: boolean;
+  data: IMessage[];
+};
+
+export interface IUserServer extends IBaseData {
+  userId: string;
+  serverId: string;
 }

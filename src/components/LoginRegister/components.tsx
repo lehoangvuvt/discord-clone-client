@@ -24,7 +24,7 @@ const Form = styled.form`
   flex-flow: column wrap;
   justify-content: center;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
 `;
 
 const FieldContainer = styled.div`
@@ -53,25 +53,9 @@ const FieldContainer = styled.div`
   }
 `;
 
-const SubmitButton = styled.button`
-  height: 42px;
-  border-radius: 5px;
-  width: 90%;
-  background: #5865f2;
-  border: none;
-  color: white;
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  transition: filter 0.2s ease;
-  &:hover {
-    filter: brightness(80%);
-  }
-`;
-
 const LinkText = styled.div`
   width: 90%;
-  margin-top: -10px;
+  margin-top: -5px;
   text-align: center;
   span:nth-child(1) {
     font-weight: 300;
@@ -89,4 +73,4 @@ const LinkText = styled.div`
   }
 `;
 
-export { Container, FieldContainer, Form, SubmitButton, LinkText };
+export { Container, FieldContainer, Form, LinkText };
