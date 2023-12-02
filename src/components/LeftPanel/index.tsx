@@ -2,7 +2,6 @@
 
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { IServer } from "@/types/api.type";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,7 +9,11 @@ import { RootState } from "@/redux/store";
 import AddIcon from "@mui/icons-material/Add";
 import Link from "next/link";
 import CreateServerPopup from "./CreateServerPopup";
-import { setChannelId, setServer } from "@/redux/slices/appSlice";
+import { setChannelId, setServer, setUserInfo } from "@/redux/slices/appSlice";
+import { SeparateLine } from "../StyledComponents";
+import ThreePIcon from "@mui/icons-material/ThreeP";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { UserService } from "@/services/UserService";
 
 const Container = styled.div`
   position: absolute;
@@ -34,6 +37,7 @@ const PanelItem = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
+  scroll-snap-align: start;
 
   &:after {
     content: "";
@@ -104,6 +108,20 @@ const AddServerButton = styled.div`
   }
 `;
 
+const LogoutButton = styled(AddServerButton)`
+  color: white;
+  position: absolute;
+  bottom: 0px;
+  transform: translateY(-20px);
+  font-size: 26px;
+  &.selected,
+  &:hover {
+    border-radius: 20%;
+    color: black;
+    background: white;
+  }
+`;
+
 const TextAvatar = styled.div`
   width: 48px;
   height: 48px;
@@ -118,14 +136,41 @@ const TextAvatar = styled.div`
   font-size: 15px;
 `;
 
+const ServersContainer = styled.div`
+  width: 100%;
+  max-height: 400px;
+  display: flex;
+  flex-flow: row wrap;
+  overflow-y: auto;
+  gap: 15px;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  &::-webkit-scrollbar {
+    width: 0px;
+  &::-webkit-scrollbar-thumb {
+    width:0px;
+  }
+`;
+
 const LeftPanel = () => {
   const params = useParams();
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
   const [isOpenCreateServer, setOpenCreateServer] = useState(false);
+  const router = useRouter();
   const dispatch = useDispatch();
   const currentConnection = useSelector(
     (state: RootState) => state.app.currentConnection
   );
+
+  const handleLogout = async () => {
+    const response = await UserService.logout();
+    if (response.status === "Success") {
+      dispatch(setUserInfo(null));
+      dispatch(setChannelId(null));
+      dispatch(setServer(null));
+      window.location.href = "/login";
+    }
+  };
 
   useEffect(() => {
     if (
@@ -139,10 +184,15 @@ const LeftPanel = () => {
           ...userInfo.joinedServers,
           ...userInfo.createdServers,
         ].filter((server) => server._id == params.serverId);
-        if (foundServers?.length > 0) {
-          dispatch(setServer(foundServers[0]));
-          dispatch(setChannelId(null));
+        if (params.serverId) {
+          if (foundServers?.length > 0) {
+            dispatch(setServer(foundServers[0]));
+            dispatch(setChannelId(null));
+          }
         }
+      } else {
+        dispatch(setServer("@me"));
+        dispatch(setChannelId("@me"));
       }
     }
   }, [params, userInfo]);
@@ -159,31 +209,52 @@ const LeftPanel = () => {
 
   return (
     <Container>
-      {userInfo &&
-        userInfo.joinedServers?.length > 0 &&
-        userInfo.joinedServers.map((ele) => (
-          <PanelItem
-            href={`/servers/${ele._id}`}
-            shallow={true}
-            className={
-              currentConnection.server?._id == ele._id
-                ? "selected"
-                : "non-selected"
-            }
-            key={ele._id}
-          >
-            {ele.avatar?.length > 0 ? (
-              <Image
-                alt="channel-img"
-                src={ele.avatar}
-                width={48}
-                height={48}
-              />
-            ) : (
-              <TextAvatar>{getShortFormServerName(ele.name)}</TextAvatar>
-            )}
-          </PanelItem>
-        ))}
+      <PanelItem
+        className={
+          currentConnection.server === "@me" ? "selected" : "non-selected"
+        }
+        href={`/me/friends`}
+        shallow={true}
+        key="@me"
+      >
+        <TextAvatar>
+          <ThreePIcon color="inherit" style={{ height: "100%" }} />
+        </TextAvatar>
+      </PanelItem>
+      <SeparateLine
+        width="55%"
+        height="2px"
+        color="rgba(255,255,255,0.2)"
+        style={{ borderRadius: "6px" }}
+      />
+      <ServersContainer>
+        {userInfo &&
+          userInfo.joinedServers?.length > 0 &&
+          userInfo.joinedServers.map((ele) => (
+            <PanelItem
+              href={`/servers/${ele._id}`}
+              shallow={true}
+              className={
+                currentConnection.server !== "@me" &&
+                currentConnection.server?._id == ele._id
+                  ? "selected"
+                  : "non-selected"
+              }
+              key={ele._id}
+            >
+              {ele.avatar?.length > 0 ? (
+                <Image
+                  alt="channel-img"
+                  src={ele.avatar}
+                  width={48}
+                  height={48}
+                />
+              ) : (
+                <TextAvatar>{getShortFormServerName(ele.name)}</TextAvatar>
+              )}
+            </PanelItem>
+          ))}
+      </ServersContainer>
       <AddServerButton
         onClick={() => setOpenCreateServer(true)}
         className={isOpenCreateServer ? "selected" : ""}
@@ -194,6 +265,15 @@ const LeftPanel = () => {
         isOpen={isOpenCreateServer}
         closePopup={() => setOpenCreateServer(false)}
       />
+      <SeparateLine
+        width="55%"
+        height="2px"
+        color="rgba(255,255,255,0.2)"
+        style={{ borderRadius: "6px" }}
+      />
+      <LogoutButton onClick={() => handleLogout()}>
+        <LogoutIcon fontSize="inherit" color="inherit" />
+      </LogoutButton>
     </Container>
   );
 };

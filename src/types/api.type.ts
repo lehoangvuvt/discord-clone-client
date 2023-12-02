@@ -1,18 +1,26 @@
 import { HttpStatusCode } from "axios";
 
+export enum RelationshipTypeEnum {
+  FRIEND = "FRIEND",
+  PENDING_REQUEST = "PENDING_REQUEST",
+  BLOCK_FIRST_SECOND = "BLOCK_FIRST_SECOND",
+  BLOCK_SECOND_FIRST = "BLOCK_SECOND_FIRST",
+  DECLINE = "DECLINE",
+}
+
 export type IApiResponseSuccess<T> = {
   status: "Success";
   statusCode: HttpStatusCode;
   data: T;
 };
 
-export type IApiResponseError = {
+export type IApiResponseError<E> = {
   status: "Error";
-  errorMessage: string;
+  errorMessage: E;
   errorCode: HttpStatusCode;
 };
 
-export type IApiResponse<T> = IApiResponseSuccess<T> | IApiResponseError;
+export type IApiResponse<T, E> = IApiResponseSuccess<T> | IApiResponseError<E>;
 
 export type ILoginData = {
   username: string;
@@ -51,6 +59,12 @@ export interface IUserInfo extends IBaseData {
   refreshToken: string;
   joinedServers: IServer[];
   createdServers: IServer[];
+}
+
+export interface IUserInfoLite extends IBaseData {
+  username: string;
+  avatar: string;
+  name: string;
 }
 
 export type IUpdateUserInfo = {
@@ -111,3 +125,34 @@ export interface IUserServer extends IBaseData {
   userId: string;
   serverId: string;
 }
+
+export interface IUserRelationship extends IBaseData {
+  userFirstId: string;
+  userSecondId: string;
+  type: string;
+}
+
+export type SendFriendRequestErrorReasonEnum =
+  | "NOT_FOUND"
+  | "FAILED"
+  | "RECEIVED_FROM_TARGET"
+  | "ALREADY_FRIEND"
+  | "BLOCKED_FROM_TARGET"
+  | "YOURSELF"
+  | "ALREADY_SENT";
+
+export type ISendFriendRequestResponse =
+  | {
+      status: "Success";
+      targetUser: IUserInfoLite;
+      result: IUserRelationship;
+    }
+  | {
+      status: "Error";
+      reason: SendFriendRequestErrorReasonEnum;
+    };
+
+export type IGetUserPendingRequestsReponse = {
+  receiveFromUsers: { user: IUserInfoLite; request: IUserRelationship }[];
+  sentToUsers: { user: IUserInfoLite; request: IUserRelationship }[];
+};

@@ -131,7 +131,7 @@ const Tree = ({ data }: { data: ITreeItem[] }) => {
     data: ITreeItem,
     level: number,
     defaultOpen: boolean,
-    isAnimation: boolean
+    index: number
   ) => {
     const pl = level * 2;
     let treeItem = (
@@ -139,12 +139,13 @@ const Tree = ({ data }: { data: ITreeItem[] }) => {
         pl={pl}
         title={data.title}
         defaultOpen={defaultOpen}
+        key={index}
         treeItemRightContent={data.treeItemRightContent ?? null}
       >
         {data.childs &&
           data.childs.length > 0 &&
           data.childs.map((childItem) =>
-            generateTree(childItem, level + 1, false, true)
+            generateTree(childItem, level + 1, false, index)
           )}
       </TreeItem>
     );
@@ -153,7 +154,7 @@ const Tree = ({ data }: { data: ITreeItem[] }) => {
 
   return (
     <Container>
-      {data.map((item) => generateTree(item, 0, true, false))}
+      {data.map((item, i) => generateTree(item, 0, true, i))}
     </Container>
   );
 };

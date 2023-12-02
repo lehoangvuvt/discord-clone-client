@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { HeadsetOff, Headset, Mic, MicOff } from "@mui/icons-material";
 import { toggleMute, toggleVolumeState } from "@/redux/slices/appSlice";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import UserDetailsPopup from "./userDetailsPopup";
 
 const Container = styled.div`

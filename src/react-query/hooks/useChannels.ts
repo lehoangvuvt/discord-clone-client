@@ -1,7 +1,7 @@
 import { useQuery } from "react-query";
 import QUERY_KEY from "../consts";
 import { IChannel } from "@/types/api.type";
-import { APIService } from "@/services/ApiService";
+import { ServerService } from "@/services/ServerService";
 
 const getChannels = async ({
   queryKey,
@@ -9,7 +9,7 @@ const getChannels = async ({
   queryKey: string[];
 }): Promise<IChannel[] | null> => {
   const serverId = queryKey[1];
-  const response = await APIService.getServerChannels(serverId);
+  const response = await ServerService.getServerChannels(serverId);
   if (response.status === "Error") return null;
   return response.data;
 };

@@ -5,7 +5,6 @@ import { ILoginData } from "@/types/api.type";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { useDispatch } from "react-redux";
-import { APIService } from "@/services/ApiService";
 import {
   Container,
   Form,
@@ -13,6 +12,7 @@ import {
 } from "@/components/LoginRegister/components";
 import InputField from "@/components/InputField";
 import Button from "@/components/Button";
+import { UserService } from "@/services/UserService";
 
 const Login = () => {
   const router = useRouter();
@@ -24,7 +24,7 @@ const Login = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data: ILoginData = { username, password };
-    const response = await APIService.login(data);
+    const response = await UserService.login(data);
     if (response.status === "Success") {
       dispatch(setUserInfo(response.data));
       router.push("/servers/655a15b3eb64541f47c42056");

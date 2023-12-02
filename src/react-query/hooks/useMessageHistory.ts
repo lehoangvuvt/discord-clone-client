@@ -1,7 +1,7 @@
 import { useQuery } from "react-query";
 import QUERY_KEY from "../consts";
 import { IGetMessageHistoryResponse } from "@/types/api.type";
-import { APIService } from "@/services/ApiService";
+import { ChannelService } from "@/services/ChannelService";
 
 const getMessageHistory = async ({
   queryKey,
@@ -11,7 +11,11 @@ const getMessageHistory = async ({
   const channelId = queryKey[1];
   const page = queryKey[2];
   const limit = queryKey[3];
-  const response = await APIService.getMessageHistory(channelId, page, limit);
+  const response = await ChannelService.getMessageHistory(
+    channelId,
+    page,
+    limit
+  );
   if (response.status === "Error") return null;
   return response.data;
 };
@@ -29,7 +33,7 @@ const useMessageHistory = (
     [QUERY_KEY.GET_MESSAGE_HISTORY, channelId, page, limit],
     getMessageHistory,
     {
-      enabled: !!channelId && !!page,
+      enabled: !!channelId && !!page && channelId !== "@me",
     }
   );
   return {

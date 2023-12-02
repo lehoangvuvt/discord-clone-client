@@ -3,23 +3,21 @@ import {
   IUserInfo,
   IApiResponse,
   IRegisterData,
-  IAttachment,
-  IAttachmentResponse,
   IUploadFile,
   IUploadFileResponse,
   IUpdateUserInfo,
-  ICreateServerData,
-  IServer,
-  IMessage,
-  IGetMessageHistoryResponse,
-  IChannel,
-  IUserServer,
+  IUserInfoLite,
+  ISendFriendRequestResponse,
+  IGetUserPendingRequestsReponse,
+  SendFriendRequestErrorReasonEnum,
+  RelationshipTypeEnum,
+  IUserRelationship,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
 
-export const APIService = {
-  async login(data: ILoginData): Promise<IApiResponse<IUserInfo>> {
+export const UserService = {
+  async login(data: ILoginData): Promise<IApiResponse<IUserInfo, string>> {
     try {
       const response = await baseAxios.post<
         ILoginData,
@@ -48,7 +46,9 @@ export const APIService = {
       };
     }
   },
-  async register(data: IRegisterData): Promise<IApiResponse<IUserInfo>> {
+  async register(
+    data: IRegisterData
+  ): Promise<IApiResponse<IUserInfo, string>> {
     const response = await baseAxios.post<
       IRegisterData,
       AxiosResponse<IUserInfo>
@@ -69,7 +69,7 @@ export const APIService = {
   },
   async uploadFile(
     data: IUploadFile
-  ): Promise<IApiResponse<IUploadFileResponse>> {
+  ): Promise<IApiResponse<IUploadFileResponse, string>> {
     const response = await baseAxios.post<
       IUploadFile,
       AxiosResponse<IUploadFileResponse>
@@ -88,28 +88,7 @@ export const APIService = {
       };
     }
   },
-  async getAttachment(
-    attachmentId: string
-  ): Promise<IApiResponse<IAttachmentResponse>> {
-    const response = await baseAxios.get<
-      IAttachment,
-      AxiosResponse<IAttachmentResponse>
-    >(`/attachments/${attachmentId}`);
-    if (response.status === 200) {
-      return {
-        status: "Success",
-        data: response.data,
-        statusCode: response.status,
-      };
-    } else {
-      return {
-        status: "Error",
-        errorCode: response.status,
-        errorMessage: `Cannot get attachment ${attachmentId}`,
-      };
-    }
-  },
-  async athentication(): Promise<IApiResponse<IUserInfo>> {
+  async athentication(): Promise<IApiResponse<IUserInfo, string>> {
     try {
       const response = await baseAxios.get<null, AxiosResponse<IUserInfo>>(
         `/users/authentication`,
@@ -136,7 +115,9 @@ export const APIService = {
       };
     }
   },
-  async getAccessTokenByRefreshToken(): Promise<IApiResponse<IUserInfo>> {
+  async getAccessTokenByRefreshToken(): Promise<
+    IApiResponse<IUserInfo, string>
+  > {
     try {
       const response = await baseAxios.get<null, AxiosResponse<IUserInfo>>(
         `/users/refresh-token`,
@@ -165,13 +146,12 @@ export const APIService = {
   },
   async updateUserInfo(
     userInfo: IUpdateUserInfo
-  ): Promise<IApiResponse<IUserInfo>> {
+  ): Promise<IApiResponse<IUserInfo, string>> {
     try {
-      const response = await baseAxios.post<null, AxiosResponse<IUserInfo>>(
-        `/users/update`,
-        userInfo,
-        { withCredentials: true }
-      );
+      const response = await baseAxios.post<
+        IUpdateUserInfo,
+        AxiosResponse<IUserInfo>
+      >(`/users/update`, userInfo, { withCredentials: true });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -193,46 +173,77 @@ export const APIService = {
       };
     }
   },
-  async createServer(data: ICreateServerData): Promise<IApiResponse<IServer>> {
+  async getFriendsList(): Promise<IApiResponse<IUserInfoLite[], string>> {
+    try {
+      const response = await baseAxios.get<
+        null,
+        AxiosResponse<IUserInfoLite[]>
+      >(`/users/friends`, { withCredentials: true });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "getFriendsList failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "getFriendsList failed",
+      };
+    }
+  },
+  async getUserPendingRequests(): Promise<
+    IApiResponse<IGetUserPendingRequestsReponse, string>
+  > {
+    try {
+      const response = await baseAxios.get<
+        null,
+        AxiosResponse<IGetUserPendingRequestsReponse>
+      >(`/users/pending-requests`, { withCredentials: true });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "getUserPendingRequests failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "getUserPendingRequests failed",
+      };
+    }
+  },
+  async sendFriendRequest(
+    targetUsername: string
+  ): Promise<
+    IApiResponse<ISendFriendRequestResponse, SendFriendRequestErrorReasonEnum>
+  > {
     try {
       const response = await baseAxios.post<
-        ICreateServerData,
-        AxiosResponse<IServer>
-      >(`/servers/create`, data, { withCredentials: true });
-      if (response.status === 200) {
-        return {
-          status: "Success",
-          statusCode: 200,
-          data: response.data,
-        };
-      } else {
-        return {
-          status: "Error",
-          errorCode: response.status,
-          errorMessage: "Create server failed",
-        };
-      }
-    } catch (e) {
-      return {
-        status: "Error",
-        errorCode: 400,
-        errorMessage: "Create server failed",
-      };
-    }
-  },
-  async getMessageHistory(
-    channelId: string,
-    page: number = 1,
-    limit: number = 20
-  ): Promise<IApiResponse<IGetMessageHistoryResponse>> {
-    try {
-      const response = await baseAxios.get<
-        null,
-        AxiosResponse<IGetMessageHistoryResponse>
+        { targetUsername: string },
+        AxiosResponse<ISendFriendRequestResponse>
       >(
-        `/channels/message-history/channelId=${channelId}&page=${page}&limit=${limit}`
+        `/users/send-friend-request`,
+        { targetUsername },
+        { withCredentials: true }
       );
-      if (response.status === 200) {
+      if (response.data.status === "Success") {
         return {
           status: "Success",
           statusCode: 200,
@@ -242,26 +253,23 @@ export const APIService = {
         return {
           status: "Error",
           errorCode: response.status,
-          errorMessage: "Get message history failed",
+          errorMessage: response.data.reason,
         };
       }
-    } catch (e) {
+    } catch (e: any) {
       return {
         status: "Error",
         errorCode: 400,
-        errorMessage: "Get message history failed",
+        errorMessage: e.response.data.error,
       };
     }
   },
-  async getNewMessagesSinceDT(
-    channelId: string,
-    datetime: string
-  ): Promise<IApiResponse<IGetMessageHistoryResponse>> {
+  async logout(): Promise<IApiResponse<{ message: string }, string>> {
     try {
       const response = await baseAxios.get<
         null,
-        AxiosResponse<IGetMessageHistoryResponse>
-      >(`/channels/new-messages/channelId=${channelId}&datetime=${datetime}`);
+        AxiosResponse<{ message: string }>
+      >(`/users/logout`, { withCredentials: true });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -272,47 +280,28 @@ export const APIService = {
         return {
           status: "Error",
           errorCode: response.status,
-          errorMessage: "Get message history failed",
+          errorMessage: "logout failed",
         };
       }
     } catch (e) {
       return {
         status: "Error",
         errorCode: 400,
-        errorMessage: "Get message history failed",
+        errorMessage: "logout failed",
       };
     }
   },
-  async getServerChannels(serverId: string): Promise<IApiResponse<IChannel[]>> {
+  async handleFriendRequest(
+    requestId: string,
+    relationshipType: RelationshipTypeEnum
+  ): Promise<IApiResponse<IUserRelationship, string>> {
     try {
-      const response = await baseAxios.get<null, AxiosResponse<IChannel[]>>(
-        `/servers/get-channels/${serverId}`
-      );
-      if (response.status === 200) {
-        return {
-          status: "Success",
-          statusCode: 200,
-          data: response.data,
-        };
-      } else {
-        return {
-          status: "Error",
-          errorCode: response.status,
-          errorMessage: "Get server channels failed",
-        };
-      }
-    } catch (e) {
-      return {
-        status: "Error",
-        errorCode: 400,
-        errorMessage: "Get server channels failed",
-      };
-    }
-  },
-  async leaveServer(serverId: string): Promise<IApiResponse<IUserServer>> {
-    try {
-      const response = await baseAxios.delete<null, AxiosResponse<IUserServer>>(
-        `/servers/leave/serverId=${serverId}`,
+      const response = await baseAxios.post<
+        { requestId: string; relationshipType: RelationshipTypeEnum },
+        AxiosResponse<IUserRelationship>
+      >(
+        `/users/handle-friend-request`,
+        { requestId, relationshipType },
         { withCredentials: true }
       );
       if (response.status === 200) {
@@ -325,14 +314,14 @@ export const APIService = {
         return {
           status: "Error",
           errorCode: response.status,
-          errorMessage: "Leave server failed",
+          errorMessage: "handleFriendRequest failed",
         };
       }
     } catch (e) {
       return {
         status: "Error",
         errorCode: 400,
-        errorMessage: "Leave server failed",
+        errorMessage: "handleFriendRequest failed",
       };
     }
   },

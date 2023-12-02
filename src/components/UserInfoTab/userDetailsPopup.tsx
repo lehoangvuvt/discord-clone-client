@@ -7,11 +7,12 @@ import { IUserInfo } from "@/types/api.type";
 import { ChangeEvent, useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { getBase64FromFile } from "@/utils/file.utils";
-import { APIService } from "@/services/ApiService";
 import { useDispatch } from "react-redux";
 import { setUserInfo } from "@/redux/slices/appSlice";
 import { LoadingOutlined } from "@ant-design/icons";
 import Button from "../Button";
+import { FileService } from "@/services/FileService";
+import { UserService } from "@/services/UserService";
 
 const Container = styled.div`
   position: fixed;
@@ -255,7 +256,7 @@ const UserDetailsPopup = ({
       const type = base64UploadFile.split(",")[0];
       const name = `avatar-user-${userInfo._id}`;
       const section = "user";
-      const uploadImgRes = await APIService.uploadFile({
+      const uploadImgRes = await FileService.uploadFile({
         base64: base64UploadFile,
         name,
         type,
@@ -274,7 +275,7 @@ const UserDetailsPopup = ({
     if (path) {
       data.avatar = path;
     }
-    const response = await APIService.updateUserInfo(data);
+    const response = await UserService.updateUserInfo(data);
     if (response.status === "Success") {
       dispatch(setUserInfo(response.data));
     }

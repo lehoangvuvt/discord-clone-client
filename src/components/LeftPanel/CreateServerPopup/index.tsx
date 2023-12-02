@@ -8,11 +8,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { getBase64FromFile } from "@/utils/file.utils";
 import Image from "next/image";
-import { APIService } from "@/services/ApiService";
 import { useRouter } from "next/navigation";
 import Popup from "../../Popup";
 import Button from "@/components/Button";
 import { setUserInfo } from "@/redux/slices/appSlice";
+import { FileService } from "@/services/FileService";
+import { ServerService } from "@/services/ServerService";
+import { UserService } from "@/services/UserService";
 
 const Container = styled.div`
   position: fixed;
@@ -166,7 +168,7 @@ const CreateServerPopup = ({
       const type = base64Img.split(",")[0];
       const name = `server-avatar-${new Date().getTime()}`;
       const section = "server";
-      const uploadFileRes = await APIService.uploadFile({
+      const uploadFileRes = await FileService.uploadFile({
         base64: base64Img,
         type,
         name,
@@ -176,13 +178,13 @@ const CreateServerPopup = ({
         path = uploadFileRes.data.path;
       }
     }
-    const response = await APIService.createServer({
+    const response = await ServerService.createServer({
       avatar: path ?? "",
       name: serverName,
     });
     if (response.status === "Success") {
       router.push(`/servers/${response.data._id}`);
-      const authenticationResponse = await APIService.athentication();
+      const authenticationResponse = await UserService.athentication();
       if (authenticationResponse.status === "Success") {
         dispatch(setUserInfo(authenticationResponse.data));
       }

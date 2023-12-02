@@ -7,7 +7,7 @@ import {
   Form,
   LinkText,
 } from "@/components/LoginRegister/components";
-import { APIService } from "@/services/ApiService";
+import { UserService } from "@/services/UserService";
 import { IRegisterData } from "@/types/api.type";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -27,7 +27,7 @@ const Login = () => {
       password,
       name,
     };
-    const response = await APIService.register(data);
+    const response = await UserService.register(data);
     if (response.status === "Success") {
       router.push("/login");
     } else {

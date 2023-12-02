@@ -10,22 +10,11 @@ import useMessageHistory from "@/react-query/hooks/useMessageHistory";
 import useNewMessages from "@/react-query/hooks/useNewMessages";
 import { setChannelId } from "@/redux/slices/appSlice";
 import { RootState } from "@/redux/store";
-import { APIService } from "@/services/ApiService";
+import { FileService } from "@/services/FileService";
 import { socket } from "@/services/socket";
-import {
-  IChannel,
-  IGetMessageHistoryResponse,
-  IMessage,
-  IUploadFile,
-  IUserInfo,
-} from "@/types/api.type";
+import { IChannel, IMessage, IUploadFile, IUserInfo } from "@/types/api.type";
 import { getBase64FromFile } from "@/utils/file.utils";
-import { getRandomInt } from "@/utils/number.utils";
-import {
-  DeleteFilled,
-  PlusCircleFilled,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { DeleteFilled, PlusCircleFilled } from "@ant-design/icons";
 import { VolumeUp, VolumeMute } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
 import axios from "axios";
@@ -362,7 +351,6 @@ export default function Server({ params }: { params: any }) {
   const [attachments, setAttachments] = useState<IUploadFile[]>([]);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [openCreateChannelPopup, setOpenCreateChannelPopup] = useState(false);
   const { channels, isLoading: loadingChannels } = useChannels(params.serverId);
   const { data: useMessageHistoryData } = useMessageHistory(
@@ -400,7 +388,11 @@ export default function Server({ params }: { params: any }) {
     if (msgInputRef && msgInputRef.current) {
       msgInputRef.current.innerHTML = "";
     }
-    if (userInfo && currentConnection.channelId) {
+    if (
+      userInfo &&
+      currentConnection.channelId &&
+      currentConnection.channelId !== "@me"
+    ) {
       const data = {
         _id: userInfo._id,
         channelId: currentConnection.channelId,
@@ -424,14 +416,12 @@ export default function Server({ params }: { params: any }) {
       socket.off(`receiveOnlineChannel=${channelId}`, getUsersByIds);
       setMessageHistory([]);
       setCurrentPage(1);
-      setHasMore(true);
     }
   };
 
   useEffect(() => {
     setMessageHistory([]);
     setCurrentPage(1);
-    setHasMore(true);
   }, [currentConnection.server]);
 
   const handleJoinedChannel = (channelId: string) => {
@@ -493,7 +483,6 @@ export default function Server({ params }: { params: any }) {
       if (data.length > 0) {
         const msgHistory = [...data, ...messageHistory];
         setMessageHistory(msgHistory);
-        setHasMore(hasMore);
         setLastFetchMessageDT(msgHistory[msgHistory.length - 1].createdAt);
       }
     }
@@ -533,7 +522,7 @@ export default function Server({ params }: { params: any }) {
         }
         let fileIds: string[] = [];
         const uploadFiles = attachments.map(async (attachment) => {
-          const response = await APIService.uploadFile({
+          const response = await FileService.uploadFile({
             base64: attachment.base64,
             name: attachment.name,
             section: attachment.section,
@@ -706,7 +695,7 @@ export default function Server({ params }: { params: any }) {
                       style={{
                         fontSize: "18px",
                         marginRight: "10px",
-                        marginTop: "2px",
+                        marginTop: "-6px",
                         color: "rgba(255,255,255,0.6)",
                         cursor: "pointer",
                       }}

@@ -2,7 +2,7 @@
 
 import { setUserInfo } from "@/redux/slices/appSlice";
 import { RootState } from "@/redux/store";
-import { APIService } from "@/services/ApiService";
+import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -19,18 +19,18 @@ const AuthHandler = () => {
     if (!router || !pathname || !dispatch) return;
 
     const authentication = async () => {
-      const authenticationResponse = await APIService.athentication();
+      const authenticationResponse = await UserService.athentication();
       if (authenticationResponse.status === "Success") {
         dispatch(setUserInfo(authenticationResponse.data));
         if (!pathname.includes("/servers")) {
-          router.push("/servers/@me");
+          router.push("/me/friends");
         }
       } else {
         const getAccessTokenResponse =
-          await APIService.getAccessTokenByRefreshToken();
+          await UserService.getAccessTokenByRefreshToken();
         if (getAccessTokenResponse.status === "Success") {
           dispatch(setUserInfo(getAccessTokenResponse.data));
-          router.push("/servers/@me");
+          router.push("/me/friends");
         } else {
           if (pathname !== "/register") {
             router.push("/login");

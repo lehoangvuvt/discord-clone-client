@@ -1,7 +1,7 @@
 import { useQuery } from "react-query";
 import QUERY_KEY from "../consts";
 import { IGetMessageHistoryResponse } from "@/types/api.type";
-import { APIService } from "@/services/ApiService";
+import { ChannelService } from "@/services/ChannelService";
 
 const getNewMessages = async ({
   queryKey,
@@ -10,7 +10,7 @@ const getNewMessages = async ({
 }): Promise<IGetMessageHistoryResponse | null> => {
   const channelId = queryKey[1];
   const lastFetchDT = queryKey[2];
-  const response = await APIService.getNewMessagesSinceDT(
+  const response = await ChannelService.getNewMessagesSinceDT(
     channelId,
     lastFetchDT
   );

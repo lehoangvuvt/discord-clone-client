@@ -20,8 +20,8 @@ const initialState: {
     volumeState: number;
   };
   currentConnection: {
-    server: IServer | null;
-    channelId: string | null;
+    server: IServer | null | "@me";
+    channelId: string | null | "@me";
   };
 } = {
   theme: {

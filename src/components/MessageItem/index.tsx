@@ -91,10 +91,7 @@ const MessageItem = ({ data }: { data: IMessage }) => {
     const fileSrc = attachment.fileDetails.path;
     if (attachment.fileDetails.type.includes("image")) {
       return (
-        <AttachmentItem
-          key={attachment._id}
-          style={{ height: "400px", width: "100%" }}
-        >
+        <AttachmentItem key={attachment._id} style={{ width: "25%", marginRight: '10px',marginBottom: '10px' }}>
           <Image
             alt="attachment-img"
             fill

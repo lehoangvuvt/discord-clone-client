@@ -6,9 +6,10 @@ import styled from "styled-components";
 import Popover from "../Popover";
 import { useState } from "react";
 import { SeparateLine } from "../StyledComponents";
-import { APIService } from "@/services/ApiService";
 import { setChannelId, setServer, setUserInfo } from "@/redux/slices/appSlice";
 import { useRouter } from "next/navigation";
+import { ServerService } from "@/services/ServerService";
+import { UserService } from "@/services/UserService";
 
 const Container = styled.div`
   width: calc(100% - 70px);
@@ -97,8 +98,15 @@ const ServerPopup = ({
     (state: RootState) => state.app.currentConnection
   );
   const handleLeaveServer = async () => {
-    if (!currentConnection || !currentConnection.server) return;
-    const response = await APIService.leaveServer(currentConnection.server._id);
+    if (
+      !currentConnection ||
+      !currentConnection.server ||
+      currentConnection.server === "@me"
+    )
+      return;
+    const response = await ServerService.leaveServer(
+      currentConnection.server._id
+    );
     if (response.status === "Success") {
       onLeaveFinished(true);
     } else {
@@ -132,13 +140,13 @@ const Header = () => {
 
   const handleOnLeaveFinished = async (isSuccess: boolean) => {
     if (isSuccess) {
-      const authenticationResponse = await APIService.athentication();
+      const authenticationResponse = await UserService.athentication();
       if (authenticationResponse.status === "Success") {
         setOpenServerPopup(false);
         dispatch(setUserInfo(authenticationResponse.data));
         dispatch(setServer(null));
         dispatch(setChannelId(null));
-        router.push("/servers/@me");
+        router.push("/me/friends");
       }
     }
   };
@@ -151,7 +159,11 @@ const Header = () => {
             setOpenServerPopup(!isOpenServerPopup);
         }}
       >
-        <span>{currentConnection?.server?.name}</span>
+        <span>
+          {currentConnection?.server !== "@me"
+            ? currentConnection?.server?.name
+            : "Direct"}
+        </span>
         <Popover isOpen={isOpenServerPopup} marginTop="7px">
           <ServerPopup onLeaveFinished={handleOnLeaveFinished} />
         </Popover>
