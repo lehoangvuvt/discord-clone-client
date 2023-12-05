@@ -139,6 +139,10 @@ export interface IServerInvitation extends IBaseData {
   invitation_short_id: string;
 }
 
+export interface IServerInvitationDetails extends IServerInvitation {
+  serverDetails: IServer;
+}
+
 export interface IUserRelationship extends IBaseData {
   userFirstId: string;
   userSecondId: string;
@@ -169,3 +173,12 @@ export type IGetUserPendingRequestsReponse = {
   receiveFromUsers: { user: IUserInfoLite; request: IUserRelationship }[];
   sentToUsers: { user: IUserInfoLite; request: IUserRelationship }[];
 };
+
+export type IUseServerInvitationResponse =
+  | {
+      status: "Success";
+    }
+  | {
+      status: "Error";
+      errorMsg: string;
+    };
