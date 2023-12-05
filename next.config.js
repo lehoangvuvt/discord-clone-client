@@ -66,6 +66,7 @@ const nextConfig = {
     serverSourceMaps: true,
   },
   staticPageGenerationTimeout: 120,
+  reactStrictMode: false,
 };
 
 module.exports = nextConfig;

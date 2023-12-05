@@ -225,6 +225,7 @@ const UserDetailsPopup = ({
   const [isUpdating, setUpdating] = useState(false);
   const [canSave, setCanSave] = useState(false);
   const dispatch = useDispatch();
+  const uploadAvatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleChangeField = (
     value: string,
@@ -344,14 +345,20 @@ const UserDetailsPopup = ({
             </FieldContainer>
             <FieldContainer $withborder={false}>
               <FieldTitle>AVATAR</FieldTitle>
-
-              <AvatarImage htmlFor="upload-file=input">
+              <AvatarImage
+                onClick={() => {
+                  if (uploadAvatarInputRef && uploadAvatarInputRef.current) {
+                    uploadAvatarInputRef.current.click();
+                  }
+                }}
+              >
                 <UploadButton>
                   <EditIcon
                     fontSize="inherit"
                     htmlColor="rgba(255,255,255,1)"
                   />
                 </UploadButton>
+
                 <Image
                   src={
                     base64UploadFile ? base64UploadFile : userInfo?.avatar ?? ""
@@ -364,14 +371,15 @@ const UserDetailsPopup = ({
                     pointerEvents: "none",
                   }}
                 />
-                <input
-                  style={{ display: "none" }}
-                  type="file"
-                  name="upload-file=input"
-                  id="upload-file=input"
-                  onChange={(e) => handleOnChangeFile(e)}
-                />
               </AvatarImage>
+              <input
+                style={{ display: "none" }}
+                ref={uploadAvatarInputRef}
+                type="file"
+                name="avatar-upload-file-input"
+                id="avatar-upload-file-input"
+                onChange={(e) => handleOnChangeFile(e)}
+              />
             </FieldContainer>
             <SaveInfoContainer className={canSave ? "show" : "hidden"}>
               <ResetButton onClick={() => handleReset()}>Reset</ResetButton>

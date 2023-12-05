@@ -10,19 +10,14 @@ const getPendingRequests =
     return response.data;
   };
 
-const usePendingRequests = (
-  currentView: "FRIEND_LIST" | "ADD_FRIEND" | "PENDING"
-): {
+const usePendingRequests = (): {
   pendingRequests: IGetUserPendingRequestsReponse | null;
   isLoading: boolean;
   isError: boolean;
 } => {
   const { data, isError, isLoading } = useQuery(
     [QUERY_KEY.GET_PENDING_REQUESTS],
-    getPendingRequests,
-    {
-      enabled: currentView === "PENDING",
-    }
+    getPendingRequests
   );
   return {
     pendingRequests: data ?? null,

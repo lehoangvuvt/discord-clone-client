@@ -27,7 +27,7 @@ const Login = () => {
     const response = await UserService.login(data);
     if (response.status === "Success") {
       dispatch(setUserInfo(response.data));
-      router.push("/servers/655a15b3eb64541f47c42056");
+      router.push("/me/friends");
     } else {
       alert(false);
     }
@@ -88,7 +88,11 @@ const Login = () => {
             fontSize: "15px",
             marginTop: "15px",
           }}
-          disabled={errorFields.length > 0}
+          disabled={
+            errorFields.length > 0 ||
+            username.length === 0 ||
+            password.length === 0
+          }
         >
           Login
         </Button>

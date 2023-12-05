@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import useFriendsList from "@/react-query/hooks/useFriendsList";
 import Image from "next/image";
-import { SeparateLine } from "@/components/StyledComponents";
+import { NotificationDot, SeparateLine } from "@/components/StyledComponents";
 import SearchBar from "@/components/SearchBar";
 import {
   IUserInfoLite,
@@ -17,6 +17,14 @@ import {
 import { UserService } from "@/services/UserService";
 import usePendingRequests from "@/react-query/hooks/usePendingRequests";
 import Button from "@/components/Button";
+import Popover from "@/components/Popover";
+import { useQueryClient } from "react-query";
+import QUERY_KEY from "@/react-query/consts";
+import { socket } from "@/services/socket";
+import ChatP2P from "./chat";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { setNotification } from "@/redux/slices/appSlice";
 
 const Container = styled.div`
   background: #313338;
@@ -60,7 +68,7 @@ const TabItem = styled.div`
   font-weight: 500;
   &.selected,
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
   }
   &.selected {
     color: white;
@@ -180,6 +188,11 @@ const FilterItem = styled.div`
   padding: 3px 8px;
   border-radius: 5px;
   transition: all 0.1s ease;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   &:hover {
     background: rgba(255, 255, 255, 0.1);
   }
@@ -283,19 +296,33 @@ const SendFriendRequestBTN = styled.button`
 `;
 
 const FriendsList = () => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [cloneFriends, setCloneFriends] = useState<IUserInfoLite[]>([]);
   const [searchValue, setSearchValue] = useState("");
+  const dispatch = useDispatch();
   const [currentView, setcurrentView] = useState<
     "FRIEND_LIST" | "ADD_FRIEND" | "PENDING"
   >("FRIEND_LIST");
-  const { friends } = useFriendsList(currentView);
-  const { pendingRequests } = usePendingRequests(currentView);
+  const { friends } = useFriendsList();
+  const { pendingRequests } = usePendingRequests();
   const [usernameFR, setUsernameFR] = useState("");
   const [sendFRState, setSendFRState] = useState<
     | { status: "Success" }
     | { status: "Error"; error: string }
     | { status: "Idle" }
   >({ status: "Idle" });
+  const notification = useSelector(
+    (state: RootState) => state.app.notification
+  );
+
+  useEffect(() => {
+    if (pendingRequests) {
+      const { receiveFromUsers } = pendingRequests;
+      const totalPending = receiveFromUsers.length;
+      dispatch(setNotification({ type: "FR", value: totalPending }));
+    }
+  }, [pendingRequests]);
 
   useEffect(() => {
     setSendFRState({ status: "Idle" });
@@ -315,9 +342,19 @@ const FriendsList = () => {
   const handleSendFR = async () => {
     const response = await UserService.sendFriendRequest(usernameFR);
     if (response.status === "Success") {
-      setSendFRState({
-        status: "Success",
-      });
+      if (response.data.status === "Success") {
+        queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
+        const targetUserId = response.data.targetUser._id;
+        socket.emit(
+          "sendFriendRequest",
+          JSON.stringify({
+            targetUserId,
+          })
+        );
+        setSendFRState({
+          status: "Success",
+        });
+      }
     } else {
       switch (response.errorMessage) {
         case "NOT_FOUND":
@@ -370,7 +407,17 @@ const FriendsList = () => {
     request: IUserRelationship,
     type: RelationshipTypeEnum
   ) => {
-    await UserService.handleFriendRequest(request._id, type);
+    const response = await UserService.handleFriendRequest(request._id, type);
+    if (response.status === "Success") {
+      queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
+      queryClient.invalidateQueries([QUERY_KEY.GET_FRIENDS_LIST]);
+      socket.emit(
+        "updatePendingRequest",
+        JSON.stringify({
+          receiverFromUserId: response.data.userFirstId,
+        })
+      );
+    }
   };
 
   useEffect(() => {
@@ -419,7 +466,10 @@ const FriendsList = () => {
           onClick={() => setcurrentView("PENDING")}
           className={currentView === "PENDING" ? "selected" : "not-selected"}
         >
-          Pending
+          Pending{" "}
+          {notification.friendRequest > 0 && (
+            <NotificationDot>{notification.friendRequest}</NotificationDot>
+          )}
         </FilterItem>
         <AddFriendItem
           onClick={() => setcurrentView("ADD_FRIEND")}
@@ -446,12 +496,15 @@ const FriendsList = () => {
               {cloneFriends &&
                 cloneFriends.length > 0 &&
                 cloneFriends.map((friend, i) => (
-                  <>
+                  <div key={friend._id}>
                     <SeparateLine
                       color="rgba(255,255,255,0.1)"
                       style={{ margin: "0px 0px" }}
                     />
-                    <FriendItem key={friend._id}>
+                    <FriendItem
+                      onClick={() => router.push(`/me/chat?id=` + friend._id)}
+                      key={friend._id}
+                    >
                       <Image
                         alt="user-avatar"
                         width={35}
@@ -465,7 +518,7 @@ const FriendsList = () => {
                       />
                       {friend.name}
                     </FriendItem>
-                  </>
+                  </div>
                 ))}
             </FriendsContainer>
           </>
@@ -650,7 +703,11 @@ export default function Me({ params }: { params: any }) {
       <Left>
         <TabsContainer>
           <TabItem
-            className={currentTab === "friends" ? "selected" : "not-selected"}
+            className={
+              currentTab === "friends" || currentTab === "chat"
+                ? "selected"
+                : "not-selected"
+            }
             onClick={() => router.push("/me/friends")}
           >
             <PeopleIcon style={{ fontSize: "23px" }} />
@@ -665,7 +722,10 @@ export default function Me({ params }: { params: any }) {
           </TabItem>
         </TabsContainer>
       </Left>
-      <Center>{currentTab === "friends" && <FriendsList />}</Center>
+      <Center>
+        {currentTab === "chat" && <ChatP2P />}
+        {currentTab === "friends" && <FriendsList />}
+      </Center>
     </Container>
   );
 }

@@ -13,19 +13,14 @@ const getFriendsList = async ({
   return response.data;
 };
 
-const useFriendsList = (
-  currentView: "FRIEND_LIST" | "ADD_FRIEND" | "PENDING"
-): {
+const useFriendsList = (): {
   friends: IUserInfoLite[] | null;
   isLoading: boolean;
   isError: boolean;
 } => {
   const { data, isError, isLoading } = useQuery(
     [QUERY_KEY.GET_FRIENDS_LIST],
-    getFriendsList,
-    {
-      enabled: currentView === "FRIEND_LIST",
-    }
+    getFriendsList
   );
   return {
     friends: data ?? null,

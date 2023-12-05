@@ -12,6 +12,7 @@ import {
   SendFriendRequestErrorReasonEnum,
   RelationshipTypeEnum,
   IUserRelationship,
+  IGetMessageHistoryResponse,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
@@ -322,6 +323,73 @@ export const UserService = {
         status: "Error",
         errorCode: 400,
         errorMessage: "handleFriendRequest failed",
+      };
+    }
+  },
+  async getP2PMessageHistory(
+    targetUserId: string,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<IApiResponse<IGetMessageHistoryResponse, string>> {
+    try {
+      const response = await baseAxios.get<
+        null,
+        AxiosResponse<IGetMessageHistoryResponse>
+      >(
+        `/users/message-history/targetUserId=${targetUserId}&page=${page}&limit=${limit}`,
+        { withCredentials: true }
+      );
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "getP2PMessageHistory failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "getP2PMessageHistory failed",
+      };
+    }
+  },
+  async getP2PNewMessagesSinceDT(
+    targetUserId: string,
+    datetime: string
+  ): Promise<IApiResponse<IGetMessageHistoryResponse, string>> {
+    try {
+      const response = await baseAxios.get<
+        null,
+        AxiosResponse<IGetMessageHistoryResponse>
+      >(
+        `/users/new-messages/targetUserId=${targetUserId}&dateTime=${datetime}`,
+        { withCredentials: true }
+      );
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "getP2PNewMessagesSinceDT history failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "getP2PNewMessagesSinceDT history failed",
       };
     }
   },

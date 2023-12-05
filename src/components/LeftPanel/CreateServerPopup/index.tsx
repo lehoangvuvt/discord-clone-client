@@ -147,6 +147,7 @@ const CreateServerPopup = ({
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
   const [file, setFile] = useState<File | null>(null);
   const [base64Img, setBase64Img] = useState<string | null>(null);
+  const serverAvatarInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -191,6 +192,13 @@ const CreateServerPopup = ({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) {
+      setFile(null);
+      setBase64Img(null);
+    }
+  }, [isOpen]);
+
   return (
     <Popup
       contentStyle={{
@@ -202,7 +210,13 @@ const CreateServerPopup = ({
       closePopup={closePopup}
     >
       <Title>Create your own server</Title>
-      <ServerImageContainer htmlFor="upload-input">
+      <ServerImageContainer
+        onClick={() => {
+          if (serverAvatarInputRef && serverAvatarInputRef.current) {
+            serverAvatarInputRef.current.click();
+          }
+        }}
+      >
         <AddCircleIcon
           htmlColor="#5865f2"
           style={{
@@ -231,14 +245,13 @@ const CreateServerPopup = ({
           />
         )}
         Upload
-        <input
-          type="file"
-          id="upload-input"
-          name="upload-input"
-          style={{ display: "none" }}
-          onChange={(e) => setFile(e.target.files![0])}
-        />
       </ServerImageContainer>
+      <input
+        type="file"
+        style={{ display: "none" }}
+        ref={serverAvatarInputRef}
+        onChange={(e) => setFile(e.target.files![0])}
+      />
       <FieldContainer $withborder>
         <FieldTitle>SERVER NAME</FieldTitle>
         <FieldInput

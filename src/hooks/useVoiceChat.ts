@@ -5,7 +5,7 @@ import { Socket } from "@/services/socket";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
-const useVoiceChat = (socket: Socket) => {
+const useVoiceChat = (socket: Socket, type: "channel" | "p2p") => {
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
   const [serverId, setServerId] = useState<string | null>(null);
   const [inVoiceChannel, setInVoiceChannel] = useState(false);
@@ -32,7 +32,7 @@ const useVoiceChat = (socket: Socket) => {
   const start = (serverId: string) => {
     if (!userInfo || typeof window === undefined) return;
     setServerId(serverId);
-    socket.on(`receiveVoiceServer=${serverId}`, handleOnReceiveVoice);
+    socket.on(`receiveVoiceServer`, handleOnReceiveVoice);
 
     navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
       const mediaRecorder = new MediaRecorder(stream);
@@ -82,7 +82,7 @@ const useVoiceChat = (socket: Socket) => {
   };
 
   const stop = (serverId: string) => {
-    socket.off(`receiveVoiceServer=${serverId}`);
+    socket.off(`receiveVoiceServer`);
     setInVoiceChannel(false);
     setServerId(null);
   };
@@ -116,9 +116,9 @@ const useVoiceChat = (socket: Socket) => {
     )
       return;
     if (userVoiceSetting.volumeState !== 0) {
-      socket.on(`receiveVoiceServer=${serverId}`, handleOnReceiveVoice);
+      socket.on(`receiveVoiceServer`, handleOnReceiveVoice);
     } else {
-      socket.off(`receiveVoiceServer=${serverId}`);
+      socket.off(`receiveVoiceServer`);
     }
   }, [
     userVoiceSetting,

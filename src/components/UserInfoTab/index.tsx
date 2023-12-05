@@ -120,11 +120,11 @@ const UserInfoTab = () => {
             alt="user-avatar"
             width={32}
             height={32}
-            style={{ borderRadius: "50%" }}
+            style={{ borderRadius: "50%", width: "32px", height: "32px" }}
           />
         )}
         <UserInfo>
-          <span>{userInfo?.name + "asdddddddd" ?? ""}</span>
+          <span>{userInfo?.name ?? ""}</span>
           <span>{userInfo?.username ?? ""}</span>
         </UserInfo>
       </Left>

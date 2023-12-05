@@ -10,10 +10,11 @@ import AddIcon from "@mui/icons-material/Add";
 import Link from "next/link";
 import CreateServerPopup from "./CreateServerPopup";
 import { setChannelId, setServer, setUserInfo } from "@/redux/slices/appSlice";
-import { SeparateLine } from "../StyledComponents";
+import { NotificationDot, SeparateLine } from "../StyledComponents";
 import ThreePIcon from "@mui/icons-material/ThreeP";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { UserService } from "@/services/UserService";
+import { socket } from "@/services/socket";
 
 const Container = styled.div`
   position: absolute;
@@ -33,7 +34,7 @@ const PanelItem = styled(Link)`
   position: relative;
   width: 100%;
   cursor: pointer;
-  overflow: hidden;
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,11 +57,11 @@ const PanelItem = styled(Link)`
       border-radius: 3px;
     }
     img,
-    div {
+    div:nth-child(1) {
       border-radius: 20%;
       filter: brightness(110%);
     }
-    div {
+    div:nth-child(1) {
       background: #5865f2;
     }
   }
@@ -77,11 +78,11 @@ const PanelItem = styled(Link)`
         border-radius: 2px;
       }
       img,
-      div {
+      div:nth-child(1) {
         border-radius: 20%;
         filter: brightness(110%);
       }
-      div {
+      div:nth-child(1) {
         background: #5865f2;
       }
     }
@@ -156,7 +157,9 @@ const LeftPanel = () => {
   const params = useParams();
   const userInfo = useSelector((state: RootState) => state.app.userInfo);
   const [isOpenCreateServer, setOpenCreateServer] = useState(false);
-  const router = useRouter();
+  const notification = useSelector(
+    (state: RootState) => state.app.notification
+  );
   const dispatch = useDispatch();
   const currentConnection = useSelector(
     (state: RootState) => state.app.currentConnection
@@ -207,19 +210,45 @@ const LeftPanel = () => {
     return shortForm;
   };
 
+  const handleLeaveServer = () => {
+    if (
+      currentConnection.server &&
+      currentConnection.server !== "@me" &&
+      userInfo
+    )
+      socket.emit(
+        "leaveServer",
+        JSON.stringify({
+          _id: userInfo._id,
+        })
+      );
+  };
+
   return (
     <Container>
       <PanelItem
         className={
           currentConnection.server === "@me" ? "selected" : "non-selected"
         }
+        onClick={() => handleLeaveServer()}
         href={`/me/friends`}
         shallow={true}
         key="@me"
       >
         <TextAvatar>
-          <ThreePIcon color="inherit" style={{ height: "100%" }} />
+          <ThreePIcon color="inherit" style={{ height: "100%" }} />{" "}
         </TextAvatar>
+        {notification.friendRequest > 0 && (
+          <NotificationDot
+            style={{
+              position: "absolute",
+              bottom: "-5px",
+              right: "10px",
+            }}
+          >
+            {notification.friendRequest}
+          </NotificationDot>
+        )}
       </PanelItem>
       <SeparateLine
         width="55%"
@@ -248,6 +277,7 @@ const LeftPanel = () => {
                   src={ele.avatar}
                   width={48}
                   height={48}
+                  style={{ width: "48px", height: "48px" }}
                 />
               ) : (
                 <TextAvatar>{getShortFormServerName(ele.name)}</TextAvatar>

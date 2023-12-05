@@ -5,7 +5,6 @@ import MessageItem from "@/components/MessageItem";
 import Popup from "@/components/Popup";
 import Tree from "@/components/Tree";
 import useVoiceChat from "@/hooks/useVoiceChat";
-import useChannels from "@/react-query/hooks/useChannels";
 import useMessageHistory from "@/react-query/hooks/useMessageHistory";
 import useNewMessages from "@/react-query/hooks/useNewMessages";
 import { setChannelId } from "@/redux/slices/appSlice";
@@ -352,18 +351,17 @@ export default function Server({ params }: { params: any }) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [openCreateChannelPopup, setOpenCreateChannelPopup] = useState(false);
-  const { channels, isLoading: loadingChannels } = useChannels(params.serverId);
   const { data: useMessageHistoryData } = useMessageHistory(
     currentConnection.channelId,
     currentPage,
-    20
+    100
   );
   const {
     start: startVoice,
     stop: stopVoice,
     inVoiceChannel,
     setInVoiceChannel,
-  } = useVoiceChat(socket);
+  } = useVoiceChat(socket, "channel");
   const [lastFetchMessageDT, setLastFetchMessageDT] = useState<string | null>(
     null
   );
@@ -379,10 +377,24 @@ export default function Server({ params }: { params: any }) {
   );
 
   useEffect(() => {
+    setMessageHistory([]);
     return () => {
       stopVoice(params.serverId);
+      setMessageHistory([]);
     };
   }, []);
+
+  useEffect(() => {
+    if (!params || !params.serverId || params.serverId === "@me" || !userInfo)
+      return;
+    socket.emit(
+      "joinServer",
+      JSON.stringify({
+        _id: userInfo._id,
+        serverId: params.serverId,
+      })
+    );
+  }, [userInfo]);
 
   useEffect(() => {
     if (msgInputRef && msgInputRef.current) {
@@ -410,10 +422,9 @@ export default function Server({ params }: { params: any }) {
   }, [currentConnection.channelId]);
 
   const removeAllSocketListener = () => {
-    if (currentConnection.channelId) {
-      const channelId = currentConnection.channelId;
+    if (currentConnection.channelId && userInfo) {
       socket.off("joinedChannel", handleJoinedChannel);
-      socket.off(`receiveOnlineChannel=${channelId}`, getUsersByIds);
+      socket.off(`receiveOnlineChannel`, getUsersByIds);
       setMessageHistory([]);
       setCurrentPage(1);
     }
@@ -425,23 +436,17 @@ export default function Server({ params }: { params: any }) {
   }, [currentConnection.server]);
 
   const handleJoinedChannel = (channelId: string) => {
-    socket.on(`receiveOnlineChannel=${channelId}`, getUsersByIds);
+    socket.on(`receiveOnlineChannel`, getUsersByIds);
   };
 
   useEffect(() => {
-    if (lastFetchMessageDT && currentConnection.channelId) {
-      socket.on(
-        `receiveMessageChannel=${currentConnection.channelId}`,
-        getNewMessagesSinceDT
-      );
+    if (lastFetchMessageDT && currentConnection.channelId && userInfo) {
+      socket.on(`receiveMessageChannel`, getNewMessagesSinceDT);
       return () => {
-        socket.off(
-          `receiveMessageChannel=${currentConnection.channelId}`,
-          getNewMessagesSinceDT
-        );
+        socket.off(`receiveMessageChannel`, getNewMessagesSinceDT);
       };
     }
-  }, [lastFetchMessageDT, currentConnection.channelId]);
+  }, [lastFetchMessageDT, currentConnection.channelId, userInfo]);
 
   const handleSelectChannel = async (channel: IChannel) => {
     setAttachments([]);
@@ -471,7 +476,7 @@ export default function Server({ params }: { params: any }) {
   useEffect(() => {
     if (useNewMessageData && useNewMessageData.data.length > 0) {
       const { data } = useNewMessageData;
-      setMessageHistory([...messageHistory, ...data]);
+      setMessageHistory([...messageHistory, data[data.length - 1]]);
       setLastFetchMessageDT(data[data.length - 1].createdAt);
       setFetchingNewMsg(false);
     }
@@ -481,9 +486,8 @@ export default function Server({ params }: { params: any }) {
     if (useMessageHistoryData) {
       const { currentPage, data, hasMore, totalPage } = useMessageHistoryData;
       if (data.length > 0) {
-        const msgHistory = [...data, ...messageHistory];
-        setMessageHistory(msgHistory);
-        setLastFetchMessageDT(msgHistory[msgHistory.length - 1].createdAt);
+        setMessageHistory(data);
+        setLastFetchMessageDT(data[data.length - 1].createdAt);
       }
     }
   }, [useMessageHistoryData]);
@@ -684,80 +688,88 @@ export default function Server({ params }: { params: any }) {
     <Container>
       <Left>
         <ChannelsContainer>
-          {!loadingChannels && channels && (
-            <Tree
-              data={[
-                {
-                  title: <ChannelTypeTitle>Text channels</ChannelTypeTitle>,
-                  treeItemRightContent: (
-                    <AddIcon
-                      onClick={() => setOpenCreateChannelPopup(true)}
-                      style={{
-                        fontSize: "18px",
-                        marginRight: "10px",
-                        marginTop: "-6px",
-                        color: "rgba(255,255,255,0.6)",
-                        cursor: "pointer",
-                      }}
-                    />
-                  ),
-                  childs: channels.map((channel) => {
-                    return {
-                      title: (
-                        <ChannelItem
-                          className={
-                            currentConnection.channelId == channel._id
-                              ? "selected"
-                              : "not-selected"
-                          }
-                          onClick={() => handleSelectChannel(channel)}
-                          key={channel._id}
-                        >
-                          <span>#</span>
-                          <span>{channel.name}</span>
-                        </ChannelItem>
-                      ),
-                    };
-                  }),
-                },
-                {
-                  title: <ChannelTypeTitle>Voice channels</ChannelTypeTitle>,
-                  childs: [
-                    {
-                      title: (
-                        <ChannelItem
-                          className={
-                            inVoiceChannel ? "selected" : "not-selected"
-                          }
-                          onClick={() => {
-                            if (!inVoiceChannel) {
-                              startVoice(params.serverId);
-                            } else {
-                              setInVoiceChannel(false);
+          {userInfo &&
+            userInfo.joinedServers.filter(
+              (server) => server._id === params.serverId
+            )[0]?.channels?.length > 0 &&
+            userInfo.joinedServers.filter(
+              (server) => server._id === params.serverId
+            )[0].channels.length > 0 && (
+              <Tree
+                data={[
+                  {
+                    title: <ChannelTypeTitle>Text channels</ChannelTypeTitle>,
+                    treeItemRightContent: (
+                      <AddIcon
+                        onClick={() => setOpenCreateChannelPopup(true)}
+                        style={{
+                          fontSize: "18px",
+                          marginRight: "10px",
+                          marginTop: "-6px",
+                          color: "rgba(255,255,255,0.6)",
+                          cursor: "pointer",
+                        }}
+                      />
+                    ),
+                    childs: userInfo.joinedServers
+                      .filter((server) => server._id === params.serverId)[0]
+                      .channels.map((channel) => {
+                        return {
+                          title: (
+                            <ChannelItem
+                              className={
+                                currentConnection.channelId == channel._id
+                                  ? "selected"
+                                  : "not-selected"
+                              }
+                              onClick={() => handleSelectChannel(channel)}
+                              key={channel._id}
+                            >
+                              <span>#</span>
+                              <span>{channel.name}</span>
+                            </ChannelItem>
+                          ),
+                        };
+                      }),
+                  },
+                  {
+                    title: <ChannelTypeTitle>Voice channels</ChannelTypeTitle>,
+                    childs: [
+                      {
+                        title: (
+                          <ChannelItem
+                            className={
+                              inVoiceChannel ? "selected" : "not-selected"
                             }
-                          }}
-                        >
-                          {inVoiceChannel ? <VolumeUp /> : <VolumeMute />}
-                          General
-                        </ChannelItem>
-                      ),
-                    },
-                  ],
-                },
-              ]}
-            />
-          )}
+                            onClick={() => {
+                              if (!inVoiceChannel) {
+                                startVoice(params.serverId);
+                              } else {
+                                setInVoiceChannel(false);
+                              }
+                            }}
+                          >
+                            {inVoiceChannel ? <VolumeUp /> : <VolumeMute />}
+                            General
+                          </ChannelItem>
+                        ),
+                      },
+                    ],
+                  },
+                ]}
+              />
+            )}
         </ChannelsContainer>
       </Left>
       {currentConnection?.channelId && (
         <>
           <MessagesContainer ref={messagesContainerRef}>
-            {lastFetchMessageDT && (
+            {/* {lastFetchMessageDT && (
               <NewMsgNotify>
                 1 new messages since{" "}
                 {new Date(lastFetchMessageDT).toDateString()}
               </NewMsgNotify>
-            )}
+            )} */}
             <MessagesHolder onScroll={handleScroll} ref={messageHolderRef}>
               {messageHistory &&
                 messageHistory.length > 0 &&

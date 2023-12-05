@@ -4,12 +4,14 @@ import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import Popover from "../Popover";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SeparateLine } from "../StyledComponents";
 import { setChannelId, setServer, setUserInfo } from "@/redux/slices/appSlice";
 import { useRouter } from "next/navigation";
 import { ServerService } from "@/services/ServerService";
 import { UserService } from "@/services/UserService";
+import Popup from "../Popup";
+import { IServerInfo } from "@/types/api.type";
 
 const Container = styled.div`
   width: calc(100% - 70px);
@@ -91,8 +93,10 @@ const ServerPopupItem = styled.div<{ hoverBgColor?: string }>`
 
 const ServerPopup = ({
   onLeaveFinished,
+  onClickServerInfo,
 }: {
   onLeaveFinished: (isSuccess: boolean) => void;
+  onClickServerInfo: () => void;
 }) => {
   const currentConnection = useSelector(
     (state: RootState) => state.app.currentConnection
@@ -116,14 +120,11 @@ const ServerPopup = ({
 
   return (
     <ServerPopupContainer>
-      <ServerPopupItem onClick={() => alert(true)}>
+      <ServerPopupItem onClick={onClickServerInfo}>
         Invite people
       </ServerPopupItem>
       <SeparateLine />
-      <ServerPopupItem
-        hoverBgColor="#FF1744"
-        onClick={() => handleLeaveServer()}
-      >
+      <ServerPopupItem hoverBgColor="#FF1744" onClick={handleLeaveServer}>
         Leave Server
       </ServerPopupItem>
     </ServerPopupContainer>
@@ -133,6 +134,10 @@ const ServerPopup = ({
 const Header = () => {
   const dispatch = useDispatch();
   const router = useRouter();
+  const [isOpenServerInfo, setOpenServerInfo] = useState(false);
+  const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const [selectedServerInfo, setSelectedServerInfo] =
+    useState<IServerInfo | null>(null);
   const currentConnection = useSelector(
     (state: RootState) => state.app.currentConnection
   );
@@ -151,6 +156,20 @@ const Header = () => {
     }
   };
 
+  useEffect(() => {
+    if (
+      currentConnection.server &&
+      currentConnection.server !== "@me" &&
+      userInfo
+    ) {
+      const currentServerId = currentConnection.server._id;
+      const selectedServerInfo = userInfo.joinedServers.filter(
+        (server) => server._id === currentServerId
+      )[0];
+      setSelectedServerInfo(selectedServerInfo);
+    }
+  }, [currentConnection, userInfo]);
+
   return (
     <Container>
       <Left
@@ -165,11 +184,25 @@ const Header = () => {
             : "Direct"}
         </span>
         <Popover isOpen={isOpenServerPopup} marginTop="7px">
-          <ServerPopup onLeaveFinished={handleOnLeaveFinished} />
+          <ServerPopup
+            onLeaveFinished={handleOnLeaveFinished}
+            onClickServerInfo={() => {
+              setOpenServerPopup(false);
+              setOpenServerInfo(true);
+            }}
+          />
         </Popover>
       </Left>
       <Center></Center>
       <Right></Right>
+      <Popup
+        isOpen={isOpenServerInfo}
+        closePopup={() => setOpenServerInfo(false)}
+      >
+        <h1 style={{ color: "white" }}>
+          {`${process.env.NEXT_PUBLIC_URL}/invite/${selectedServerInfo?.invitation?.invitation_short_id}`}
+        </h1>
+      </Popup>
     </Container>
   );
 };

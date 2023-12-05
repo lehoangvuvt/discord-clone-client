@@ -1,4 +1,4 @@
-import { IChannel, IUserInfo } from "@/types/api.type";
+import { IChannel, IServerInfo, IUserInfo } from "@/types/api.type";
 import { createSlice } from "@reduxjs/toolkit";
 import { IServer } from "@/types/api.type";
 
@@ -7,7 +7,7 @@ export type Palette = {
   color: string;
 };
 
-const initialState: {
+type State = {
   theme: {
     name: "LIGHT" | "DARK";
     palette: Palette;
@@ -23,7 +23,12 @@ const initialState: {
     server: IServer | null | "@me";
     channelId: string | null | "@me";
   };
-} = {
+  notification: {
+    friendRequest: number;
+  };
+};
+
+const initialState: State = {
   theme: {
     name: "LIGHT",
     palette: {
@@ -41,6 +46,9 @@ const initialState: {
   currentConnection: {
     server: null,
     channelId: null,
+  },
+  notification: {
+    friendRequest: 0,
   },
 };
 
@@ -90,6 +98,16 @@ const appSlice = createSlice({
     setChannelId: (state, action) => {
       state.currentConnection.channelId = action.payload;
     },
+    setNotification: (
+      state,
+      action: { payload: { type: "FR"; value: number } }
+    ) => {
+      switch (action.payload.type) {
+        case "FR":
+          state.notification.friendRequest = action.payload.value;
+          break;
+      }
+    },
   },
 });
 
@@ -101,5 +119,6 @@ export const {
   toggleVolumeState,
   setServer,
   setChannelId,
+  setNotification,
 } = appSlice.actions;
 export default appSlice.reducer;

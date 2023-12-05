@@ -4,6 +4,7 @@ import {
   IServer,
   IChannel,
   IUserServer,
+  IServerInfo,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
@@ -38,7 +39,35 @@ export const ServerService = {
       };
     }
   },
-
+  async getServerInfo(
+    serverId: string
+  ): Promise<IApiResponse<IServerInfo, string>> {
+    try {
+      const response = await baseAxios.get<null, AxiosResponse<IServerInfo>>(
+        `/servers/${serverId}`,
+        { withCredentials: true }
+      );
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "getServerInfo failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "getServerInfo failed",
+      };
+    }
+  },
   async getServerChannels(
     serverId: string
   ): Promise<IApiResponse<IChannel[], string>> {

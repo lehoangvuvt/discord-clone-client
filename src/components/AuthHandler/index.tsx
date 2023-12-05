@@ -1,15 +1,17 @@
 "use client";
 
+import QUERY_KEY from "@/react-query/consts";
 import { setUserInfo } from "@/redux/slices/appSlice";
 import { RootState } from "@/redux/store";
 import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
 import { usePathname, useRouter } from "next/navigation";
-
 import { useEffect } from "react";
+import { useQueryClient } from "react-query";
 import { useDispatch, useSelector } from "react-redux";
 
 const AuthHandler = () => {
+  const queryClient = useQueryClient();
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
@@ -22,7 +24,7 @@ const AuthHandler = () => {
       const authenticationResponse = await UserService.athentication();
       if (authenticationResponse.status === "Success") {
         dispatch(setUserInfo(authenticationResponse.data));
-        if (!pathname.includes("/servers")) {
+        if (!pathname.includes("/servers") && !pathname.includes("/invite")) {
           router.push("/me/friends");
         }
       } else {
@@ -32,6 +34,8 @@ const AuthHandler = () => {
           dispatch(setUserInfo(getAccessTokenResponse.data));
           router.push("/me/friends");
         } else {
+          socket.removeAllListeners();
+          socket.disconnect();
           if (pathname !== "/register") {
             router.push("/login");
           }
@@ -42,15 +46,30 @@ const AuthHandler = () => {
     authentication();
   }, []);
 
-  const onConnect = () => {};
-  const onDisconnect = () => {};
+  const onConnect = () => {
+    socket.on("receiveFriendRequest", handleReceiveFriendRequest);
+    socket.on("receiveUpdatePendingRequest", handleReceiveUpdatePendingRequest);
+  };
+
+  const handleReceiveFriendRequest = () => {
+    queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
+  };
+
+  const handleReceiveUpdatePendingRequest = () => {
+    queryClient.invalidateQueries([QUERY_KEY.GET_FRIENDS_LIST]);
+    queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
+  };
+
+  const onDisconnect = () => {
+    socket.removeAllListeners();
+  };
 
   useEffect(() => {
     if (userInfo) {
       socket.auth = { accessToken: userInfo.accessToken };
       socket.connect();
       socket.on("connect", onConnect);
-      socket.on("disconnect", onConnect);
+      socket.on("disconnect", onDisconnect);
 
       return () => {
         socket.off("connect", onConnect);

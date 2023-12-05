@@ -22,6 +22,7 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "critters": "^0.0.20",
+    "fast-average-color": "^9.4.0",
     "fs": "^0.0.1-security",
     "next": "14.0.2",
     "react": "^18",

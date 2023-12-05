@@ -145,7 +145,11 @@ const Login = () => {
             fontSize: "15px",
             marginTop: "15px",
           }}
-          disabled={errorFields.length > 0}
+          disabled={
+            errorFields.length > 0 ||
+            username.length === 0 ||
+            password.length === 0
+          }
         >
           Register
         </Button>

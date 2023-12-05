@@ -57,11 +57,12 @@ const Right = styled.div`
 const HeaderCenterFriend = () => {};
 
 const Header = ({ tabType }: { tabType: string }) => {
+  const noCenterHeaderTabs = ["friends", "chat"];
   return (
     <Container>
       <Left></Left>
-      {tabType !== "friends" && <Center></Center>}
-      {tabType !== "friends" && <Right></Right>}
+      {!noCenterHeaderTabs.includes(tabType) && <Center></Center>}
+      {!noCenterHeaderTabs.includes(tabType) && <Right></Right>}
     </Container>
   );
 };

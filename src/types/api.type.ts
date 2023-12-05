@@ -57,8 +57,8 @@ export interface IUserInfo extends IBaseData {
   name: string;
   accessToken: string;
   refreshToken: string;
-  joinedServers: IServer[];
-  createdServers: IServer[];
+  joinedServers: IServerInfo[];
+  createdServers: IServerInfo[];
 }
 
 export interface IUserInfoLite extends IBaseData {
@@ -124,6 +124,19 @@ export type IGetMessageHistoryResponse = {
 export interface IUserServer extends IBaseData {
   userId: string;
   serverId: string;
+}
+
+export interface IServerInfo extends IServer {
+  invitation: IServerInvitation | null;
+  channels: IChannel[];
+}
+
+export interface IServerInvitation extends IBaseData {
+  serverId: string;
+  expiredAt: string;
+  limit: number;
+  used_count: number;
+  invitation_short_id: string;
 }
 
 export interface IUserRelationship extends IBaseData {
