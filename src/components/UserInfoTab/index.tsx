@@ -16,7 +16,7 @@ const Container = styled.div`
   background: #232428;
   bottom: 0;
   left: 70px;
-  z-index: 100;
+  z-index: 50;
   display: flex;
   flex-flow: row wrap;
   padding: 5px 4px;

@@ -11,7 +11,7 @@ const Container = styled.div`
   height: 100%;
   background-color: rgba(0, 0, 0, 0);
   display: none;
-  z-index: 103;
+  z-index: 1000;
   display: none;
   align-items: center;
   justify-content: center;

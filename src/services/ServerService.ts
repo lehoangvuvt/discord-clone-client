@@ -7,6 +7,7 @@ import {
   IServerInfo,
   IServerInvitationDetails,
   IUseServerInvitationResponse,
+  IServerInvitation,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
@@ -186,6 +187,37 @@ export const ServerService = {
         status: "Error",
         errorCode: 400,
         errorMessage: "useServerInvitation failed",
+      };
+    }
+  },
+  async createServerInvitation(
+    serverId: string
+  ): Promise<IApiResponse<IServerInvitation, string>> {
+    try {
+      const response = await baseAxios.post<
+        null,
+        AxiosResponse<IServerInvitation>
+      >(`/servers/create/server-invitation/${serverId}`, {
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "createServerInvitation failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "createServerInvitation failed",
       };
     }
   },

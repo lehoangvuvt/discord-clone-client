@@ -4,14 +4,15 @@ import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import Popover from "../Popover";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SeparateLine } from "../StyledComponents";
 import { setChannelId, setServer, setUserInfo } from "@/redux/slices/appSlice";
 import { useRouter } from "next/navigation";
 import { ServerService } from "@/services/ServerService";
 import { UserService } from "@/services/UserService";
 import Popup from "../Popup";
-import { IServerInfo } from "@/types/api.type";
+import { IServerInfo, IServerInvitation } from "@/types/api.type";
+import Button from "../Button";
 
 const Container = styled.div`
   width: calc(100% - 70px);
@@ -91,12 +92,68 @@ const ServerPopupItem = styled.div<{ hoverBgColor?: string }>`
   }
 `;
 
+const ServerInvitationContainer = styled.div`
+  background: #313338;
+  width: 550px;
+  border-radius: 6px;
+  padding: 20px 20px;
+  h1 {
+    padding-bottom: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  p {
+    font-weight: 500;
+    font-size: 11px;
+    padding-top: 10px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  a {
+    color: #0a8fd1;
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const ServerInvitationInputContainer = styled.div`
+  position: relative;
+  input {
+    width: 100%;
+    background: #1e1f22;
+    border: none;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+    border-radius: 4px;
+    padding: 10px 10px;
+    outline: none;
+  }
+  button {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 5px;
+    height: 32px;
+    width: 78px;
+    background: #5865f2;
+  }
+  &.copied {
+    button {
+      background: #248046;
+    }
+  }
+`;
+
 const ServerPopup = ({
   onLeaveFinished,
-  onClickServerInfo,
+  onClickInvite,
 }: {
   onLeaveFinished: (isSuccess: boolean) => void;
-  onClickServerInfo: () => void;
+  onClickInvite: () => void;
 }) => {
   const currentConnection = useSelector(
     (state: RootState) => state.app.currentConnection
@@ -120,9 +177,7 @@ const ServerPopup = ({
 
   return (
     <ServerPopupContainer>
-      <ServerPopupItem onClick={onClickServerInfo}>
-        Invite people
-      </ServerPopupItem>
+      <ServerPopupItem onClick={onClickInvite}>Invite people</ServerPopupItem>
       <SeparateLine />
       <ServerPopupItem hoverBgColor="#FF1744" onClick={handleLeaveServer}>
         Leave Server
@@ -142,6 +197,10 @@ const Header = () => {
     (state: RootState) => state.app.currentConnection
   );
   const [isOpenServerPopup, setOpenServerPopup] = useState(false);
+  const [isCopied, setCopied] = useState(false);
+  const serverInvitationInputRef = useRef<HTMLInputElement>(null);
+  const [serverInvitation, setServerInvitation] =
+    useState<IServerInvitation | null>(null);
 
   const handleOnLeaveFinished = async (isSuccess: boolean) => {
     if (isSuccess) {
@@ -170,6 +229,29 @@ const Header = () => {
     }
   }, [currentConnection, userInfo]);
 
+  const handleCopy = () => {
+    if (serverInvitationInputRef && serverInvitationInputRef.current) {
+      serverInvitationInputRef.current.select();
+      serverInvitationInputRef.current.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(serverInvitationInputRef.current.value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1000);
+    }
+  };
+
+  const handleOnClickInvite = async () => {
+    if (!selectedServerInfo) return;
+    setServerInvitation(null);
+    setOpenServerPopup(false);
+    setOpenServerInfo(true);
+    const response = await ServerService.createServerInvitation(
+      selectedServerInfo._id
+    );
+    if (response.status === "Success") {
+      setServerInvitation(response.data);
+    }
+  };
+
   return (
     <Container>
       <Left
@@ -186,10 +268,7 @@ const Header = () => {
         <Popover isOpen={isOpenServerPopup} marginTop="7px">
           <ServerPopup
             onLeaveFinished={handleOnLeaveFinished}
-            onClickServerInfo={() => {
-              setOpenServerPopup(false);
-              setOpenServerInfo(true);
-            }}
+            onClickInvite={handleOnClickInvite}
           />
         </Popover>
       </Left>
@@ -199,9 +278,35 @@ const Header = () => {
         isOpen={isOpenServerInfo}
         closePopup={() => setOpenServerInfo(false)}
       >
-        <h1 style={{ color: "white" }}>
-          {`${process.env.NEXT_PUBLIC_URL}/invite/${selectedServerInfo?.invitation?.invitation_short_id}`}
-        </h1>
+        <ServerInvitationContainer>
+          <h1>
+            Invite friends to{" "}
+            <span style={{ fontWeight: 700 }}>{selectedServerInfo?.name}</span>
+          </h1>
+          <ServerInvitationInputContainer className={isCopied ? "copied" : ""}>
+            <input
+              onClick={() => {
+                if (
+                  serverInvitationInputRef &&
+                  serverInvitationInputRef.current
+                ) {
+                  serverInvitationInputRef.current.select();
+                }
+              }}
+              ref={serverInvitationInputRef}
+              readOnly
+              value={
+                serverInvitation
+                  ? `${process.env.NEXT_PUBLIC_URL}/invite/${serverInvitation?.invitation_short_id}`
+                  : `${process.env.NEXT_PUBLIC_URL}/invite`
+              }
+            />
+            <Button onClick={handleCopy}>{isCopied ? "Copied" : "Copy"}</Button>
+          </ServerInvitationInputContainer>
+          <p>
+            Your invite link expires in 7 days. <a>Edit invite link.</a>
+          </p>
+        </ServerInvitationContainer>
       </Popup>
     </Container>
   );
