@@ -194,11 +194,10 @@ export const ServerService = {
     serverId: string
   ): Promise<IApiResponse<IServerInvitation, string>> {
     try {
-      const response = await baseAxios.post<
-        null,
-        AxiosResponse<IServerInvitation>
-      >(`/servers/create/server-invitation/${serverId}`, {
+      const response = await baseAxios<null, AxiosResponse<IServerInvitation>>({
+        method: "POST",
         withCredentials: true,
+        url: `/servers/create/server-invitation/${serverId}`,
       });
       if (response.status === 200) {
         return {

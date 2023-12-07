@@ -2,11 +2,12 @@
 
 import { RootState } from "@/redux/store";
 import { Socket } from "@/services/socket";
+import useUserInfo from "@/zustand/useUserInfo";
 import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 const useVoiceChat = (socket: Socket, type: "channel" | "p2p") => {
-  const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const { userInfo } = useUserInfo();
   const [serverId, setServerId] = useState<string | null>(null);
   const [inVoiceChannel, setInVoiceChannel] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(

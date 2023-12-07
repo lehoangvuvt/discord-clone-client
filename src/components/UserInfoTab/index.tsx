@@ -8,6 +8,7 @@ import styled from "styled-components";
 import { HeadsetOff, Headset, Mic, MicOff } from "@mui/icons-material";
 import { toggleMute, toggleVolumeState } from "@/redux/slices/appSlice";
 import UserDetailsPopup from "./userDetailsPopup";
+import useUserInfo from "@/zustand/useUserInfo";
 
 const Container = styled.div`
   position: absolute;
@@ -104,7 +105,7 @@ const Right = styled.div`
 `;
 
 const UserInfoTab = () => {
-  const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const { userInfo } = useUserInfo();
   const [isOpenPopup, setOpenPopup] = useState(false);
   const dispatch = useDispatch();
   const userVoiceState = useSelector(
@@ -112,34 +113,36 @@ const UserInfoTab = () => {
   );
 
   return (
-    <Container>
-      <Left onClick={() => setOpenPopup(!isOpenPopup)}>
-        {userInfo?.avatar && (
-          <Image
-            src={userInfo.avatar}
-            alt="user-avatar"
-            width={32}
-            height={32}
-            style={{ borderRadius: "50%", width: "32px", height: "32px" }}
-          />
-        )}
-        <UserInfo>
-          <span>{userInfo?.name ?? ""}</span>
-          <span>{userInfo?.username ?? ""}</span>
-        </UserInfo>
-      </Left>
-      <Right>
-        {userVoiceState.mute ? (
-          <MicOff onClick={() => dispatch(toggleMute())} />
-        ) : (
-          <Mic onClick={() => dispatch(toggleMute())} />
-        )}
-        {userVoiceState.volumeState == 1 ? (
-          <Headset onClick={() => dispatch(toggleVolumeState())} />
-        ) : (
-          <HeadsetOff onClick={() => dispatch(toggleVolumeState())} />
-        )}
-      </Right>
+    <>
+      <Container>
+        <Left onClick={() => setOpenPopup(!isOpenPopup)}>
+          {userInfo?.avatar && (
+            <Image
+              src={userInfo.avatar}
+              alt="user-avatar"
+              width={32}
+              height={32}
+              style={{ borderRadius: "50%", width: "32px", height: "32px" }}
+            />
+          )}
+          <UserInfo>
+            <span>{userInfo?.name ?? ""}</span>
+            <span>{userInfo?.username ?? ""}</span>
+          </UserInfo>
+        </Left>
+        <Right>
+          {userVoiceState.mute ? (
+            <MicOff onClick={() => dispatch(toggleMute())} />
+          ) : (
+            <Mic onClick={() => dispatch(toggleMute())} />
+          )}
+          {userVoiceState.volumeState == 1 ? (
+            <Headset onClick={() => dispatch(toggleVolumeState())} />
+          ) : (
+            <HeadsetOff onClick={() => dispatch(toggleVolumeState())} />
+          )}
+        </Right>
+      </Container>
       {userInfo && (
         <UserDetailsPopup
           key={isOpenPopup + ""}
@@ -148,7 +151,7 @@ const UserInfoTab = () => {
           setOpenPopup={(state) => setOpenPopup(state)}
         />
       )}
-    </Container>
+    </>
   );
 };
 

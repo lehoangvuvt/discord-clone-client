@@ -127,7 +127,6 @@ export interface IUserServer extends IBaseData {
 }
 
 export interface IServerInfo extends IServer {
-  invitation: IServerInvitation | null;
   channels: IChannel[];
 }
 
@@ -137,10 +136,13 @@ export interface IServerInvitation extends IBaseData {
   limit: number;
   used_count: number;
   invitation_short_id: string;
+  createdBy: string;
 }
 
 export interface IServerInvitationDetails extends IServerInvitation {
   serverDetails: IServer;
+  creator: IUserInfoLite;
+  isExpired: boolean;
 }
 
 export interface IUserRelationship extends IBaseData {

@@ -8,11 +8,11 @@ import { ChangeEvent, useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { getBase64FromFile } from "@/utils/file.utils";
 import { useDispatch } from "react-redux";
-import { setUserInfo } from "@/redux/slices/appSlice";
 import { LoadingOutlined } from "@ant-design/icons";
 import Button from "../Button";
 import { FileService } from "@/services/FileService";
 import { UserService } from "@/services/UserService";
+import useUserInfo from "@/zustand/useUserInfo";
 
 const Container = styled.div`
   position: fixed;
@@ -225,6 +225,7 @@ const UserDetailsPopup = ({
   const [isUpdating, setUpdating] = useState(false);
   const [canSave, setCanSave] = useState(false);
   const dispatch = useDispatch();
+  const { setUserInfo } = useUserInfo();
   const uploadAvatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleChangeField = (
@@ -278,7 +279,7 @@ const UserDetailsPopup = ({
     }
     const response = await UserService.updateUserInfo(data);
     if (response.status === "Success") {
-      dispatch(setUserInfo(response.data));
+      setUserInfo(response.data);
     }
     setBase64UploadFile(null);
     setUploadImage(null);

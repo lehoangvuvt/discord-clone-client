@@ -1,6 +1,5 @@
 "use client";
 
-import { setUserInfo } from "@/redux/slices/appSlice";
 import { ILoginData } from "@/types/api.type";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -13,12 +12,14 @@ import {
 import InputField from "@/components/InputField";
 import Button from "@/components/Button";
 import { UserService } from "@/services/UserService";
+import useUserInfo from "@/zustand/useUserInfo";
 
 const Login = () => {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorFields, setErrorFields] = useState<string[]>([]);
+  const { userInfo, setUserInfo } = useUserInfo();
   const dispatch = useDispatch();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -26,7 +27,7 @@ const Login = () => {
     const data: ILoginData = { username, password };
     const response = await UserService.login(data);
     if (response.status === "Success") {
-      dispatch(setUserInfo(response.data));
+      setUserInfo(response.data);
       router.push("/me/friends");
     } else {
       alert(false);

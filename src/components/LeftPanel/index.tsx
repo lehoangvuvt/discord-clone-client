@@ -3,18 +3,19 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import AddIcon from "@mui/icons-material/Add";
 import Link from "next/link";
 import CreateServerPopup from "./CreateServerPopup";
-import { setChannelId, setServer, setUserInfo } from "@/redux/slices/appSlice";
+import { setChannelId, setServer } from "@/redux/slices/appSlice";
 import { NotificationDot, SeparateLine } from "../StyledComponents";
 import ThreePIcon from "@mui/icons-material/ThreeP";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
+import useUserInfo from "@/zustand/useUserInfo";
 
 const Container = styled.div`
   position: absolute;
@@ -155,7 +156,7 @@ const ServersContainer = styled.div`
 
 const LeftPanel = () => {
   const params = useParams();
-  const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const { userInfo, setUserInfo } = useUserInfo();
   const [isOpenCreateServer, setOpenCreateServer] = useState(false);
   const notification = useSelector(
     (state: RootState) => state.app.notification
@@ -168,7 +169,7 @@ const LeftPanel = () => {
   const handleLogout = async () => {
     const response = await UserService.logout();
     if (response.status === "Success") {
-      dispatch(setUserInfo(null));
+      setUserInfo(null);
       dispatch(setChannelId(null));
       dispatch(setServer(null));
       window.location.href = "/login";

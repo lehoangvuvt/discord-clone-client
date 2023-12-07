@@ -14,7 +14,7 @@ type State = {
   };
   lang: "vi_VN" | "en_US";
   channelId: string | null;
-  userInfo: IUserInfo | null;
+  // userInfo: IUserInfo | null;
   userVoiceState: {
     mute: boolean;
     volumeState: number;
@@ -38,7 +38,7 @@ const initialState: State = {
   },
   lang: "vi_VN",
   channelId: null,
-  userInfo: null,
+  // userInfo: null,
   userVoiceState: {
     mute: false,
     volumeState: 1,
@@ -82,9 +82,9 @@ const appSlice = createSlice({
       localStorage.setItem("LANG", action.payload);
       state.lang = action.payload;
     },
-    setUserInfo: (state, action) => {
-      state.userInfo = action.payload;
-    },
+    // setUserInfo: (state, action) => {
+    //   state.userInfo = action.payload;
+    // },
     toggleMute: (state) => {
       state.userVoiceState.mute = !state.userVoiceState.mute;
     },
@@ -104,7 +104,7 @@ const appSlice = createSlice({
     ) => {
       switch (action.payload.type) {
         case "FR":
-          state.notification.friendRequest = action.payload.value;
+          state.notification.friendRequest += action.payload.value;
           break;
       }
     },
@@ -114,7 +114,7 @@ const appSlice = createSlice({
 export const {
   setTheme,
   setLang,
-  setUserInfo,
+  // setUserInfo,
   toggleMute,
   toggleVolumeState,
   setServer,

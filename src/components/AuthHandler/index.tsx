@@ -1,10 +1,11 @@
 "use client";
 
 import QUERY_KEY from "@/react-query/consts";
-import { setUserInfo } from "@/redux/slices/appSlice";
+import { setNotification } from "@/redux/slices/appSlice";
 import { RootState } from "@/redux/store";
 import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
+import useUserInfo from "@/zustand/useUserInfo";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useQueryClient } from "react-query";
@@ -15,7 +16,7 @@ const AuthHandler = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
-  const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const { userInfo, setUserInfo } = useUserInfo();
 
   useEffect(() => {
     if (!router || !pathname || !dispatch) return;
@@ -23,7 +24,7 @@ const AuthHandler = () => {
     const authentication = async () => {
       const authenticationResponse = await UserService.athentication();
       if (authenticationResponse.status === "Success") {
-        dispatch(setUserInfo(authenticationResponse.data));
+        setUserInfo(authenticationResponse.data);
         if (!pathname.includes("/servers") && !pathname.includes("/invite")) {
           router.push("/me/friends");
         }
@@ -31,7 +32,7 @@ const AuthHandler = () => {
         const getAccessTokenResponse =
           await UserService.getAccessTokenByRefreshToken();
         if (getAccessTokenResponse.status === "Success") {
-          dispatch(setUserInfo(getAccessTokenResponse.data));
+          setUserInfo(getAccessTokenResponse.data);
           router.push("/me/friends");
         } else {
           socket.removeAllListeners();
@@ -70,11 +71,6 @@ const AuthHandler = () => {
       socket.connect();
       socket.on("connect", onConnect);
       socket.on("disconnect", onDisconnect);
-
-      return () => {
-        socket.off("connect", onConnect);
-        socket.off("disconnect", onDisconnect);
-      };
     }
   }, [userInfo]);
 

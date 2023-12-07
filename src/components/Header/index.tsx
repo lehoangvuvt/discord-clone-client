@@ -6,13 +6,14 @@ import styled from "styled-components";
 import Popover from "../Popover";
 import { useEffect, useRef, useState } from "react";
 import { SeparateLine } from "../StyledComponents";
-import { setChannelId, setServer, setUserInfo } from "@/redux/slices/appSlice";
+import { setChannelId, setServer } from "@/redux/slices/appSlice";
 import { useRouter } from "next/navigation";
 import { ServerService } from "@/services/ServerService";
 import { UserService } from "@/services/UserService";
 import Popup from "../Popup";
 import { IServerInfo, IServerInvitation } from "@/types/api.type";
 import Button from "../Button";
+import useUserInfo from "@/zustand/useUserInfo";
 
 const Container = styled.div`
   width: calc(100% - 70px);
@@ -94,7 +95,7 @@ const ServerPopupItem = styled.div<{ hoverBgColor?: string }>`
 
 const ServerInvitationContainer = styled.div`
   background: #313338;
-  width: 550px;
+  width: 700px;
   border-radius: 6px;
   padding: 20px 20px;
   h1 {
@@ -128,7 +129,7 @@ const ServerInvitationInputContainer = styled.div`
     color: rgba(255, 255, 255, 0.85);
     font-weight: 400;
     border-radius: 4px;
-    padding: 10px 10px;
+    padding: 10px 90px 10px 10px;
     outline: none;
   }
   button {
@@ -190,7 +191,6 @@ const Header = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [isOpenServerInfo, setOpenServerInfo] = useState(false);
-  const userInfo = useSelector((state: RootState) => state.app.userInfo);
   const [selectedServerInfo, setSelectedServerInfo] =
     useState<IServerInfo | null>(null);
   const currentConnection = useSelector(
@@ -201,13 +201,14 @@ const Header = () => {
   const serverInvitationInputRef = useRef<HTMLInputElement>(null);
   const [serverInvitation, setServerInvitation] =
     useState<IServerInvitation | null>(null);
+  const { userInfo, setUserInfo } = useUserInfo();
 
   const handleOnLeaveFinished = async (isSuccess: boolean) => {
     if (isSuccess) {
       const authenticationResponse = await UserService.athentication();
       if (authenticationResponse.status === "Success") {
         setOpenServerPopup(false);
-        dispatch(setUserInfo(authenticationResponse.data));
+        setUserInfo(authenticationResponse.data);
         dispatch(setServer(null));
         dispatch(setChannelId(null));
         router.push("/me/friends");

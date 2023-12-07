@@ -13,6 +13,7 @@ import { FileService } from "@/services/FileService";
 import { socket } from "@/services/socket";
 import { IChannel, IMessage, IUploadFile, IUserInfo } from "@/types/api.type";
 import { getBase64FromFile } from "@/utils/file.utils";
+import useUserInfo from "@/zustand/useUserInfo";
 import { DeleteFilled, PlusCircleFilled } from "@ant-design/icons";
 import { VolumeUp, VolumeMute } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
@@ -340,7 +341,7 @@ export default function Server({ params }: { params: any }) {
   const currentConnection = useSelector(
     (state: RootState) => state.app.currentConnection
   );
-  const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const { userInfo } = useUserInfo();
   const [messageHistory, setMessageHistory] = useState<IMessage[]>([]);
   const messageHolderRef = useRef<HTMLDivElement | null>(null);
   const [onlineUsers, setOnineUsers] = useState<IUserInfo[]>([]);

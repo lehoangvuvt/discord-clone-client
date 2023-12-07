@@ -11,10 +11,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Popup from "../../Popup";
 import Button from "@/components/Button";
-import { setUserInfo } from "@/redux/slices/appSlice";
 import { FileService } from "@/services/FileService";
 import { ServerService } from "@/services/ServerService";
 import { UserService } from "@/services/UserService";
+import useUserInfo from "@/zustand/useUserInfo";
 
 const Container = styled.div`
   position: fixed;
@@ -144,7 +144,7 @@ const CreateServerPopup = ({
   closePopup: () => void;
 }) => {
   const [serverName, setServerName] = useState("");
-  const userInfo = useSelector((state: RootState) => state.app.userInfo);
+  const { userInfo, setUserInfo } = useUserInfo();
   const [file, setFile] = useState<File | null>(null);
   const [base64Img, setBase64Img] = useState<string | null>(null);
   const serverAvatarInputRef = useRef<HTMLInputElement>(null);
@@ -187,7 +187,7 @@ const CreateServerPopup = ({
       router.push(`/servers/${response.data._id}`);
       const authenticationResponse = await UserService.athentication();
       if (authenticationResponse.status === "Success") {
-        dispatch(setUserInfo(authenticationResponse.data));
+        setUserInfo(authenticationResponse.data);
       }
     }
   };

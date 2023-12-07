@@ -411,6 +411,7 @@ const FriendsList = () => {
     if (response.status === "Success") {
       queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
       queryClient.invalidateQueries([QUERY_KEY.GET_FRIENDS_LIST]);
+      dispatch(setNotification({ type: "FR", value: -1 }));
       socket.emit(
         "updatePendingRequest",
         JSON.stringify({
