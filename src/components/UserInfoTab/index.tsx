@@ -1,14 +1,11 @@
 "use client";
 
-import { RootState } from "@/redux/store";
 import Image from "next/image";
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { HeadsetOff, Headset, Mic, MicOff } from "@mui/icons-material";
-import { toggleMute, toggleVolumeState } from "@/redux/slices/appSlice";
 import UserDetailsPopup from "./userDetailsPopup";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 
 const Container = styled.div`
   position: absolute;
@@ -105,13 +102,9 @@ const Right = styled.div`
 `;
 
 const UserInfoTab = () => {
-  const { userInfo } = useUserInfo();
+  const { userInfo, toggleVolumeState, toggleMute, userVoiceState } =
+    useStore();
   const [isOpenPopup, setOpenPopup] = useState(false);
-  const dispatch = useDispatch();
-  const userVoiceState = useSelector(
-    (state: RootState) => state.app.userVoiceState
-  );
-
   return (
     <>
       <Container>
@@ -132,14 +125,14 @@ const UserInfoTab = () => {
         </Left>
         <Right>
           {userVoiceState.mute ? (
-            <MicOff onClick={() => dispatch(toggleMute())} />
+            <MicOff onClick={() => toggleMute()} />
           ) : (
-            <Mic onClick={() => dispatch(toggleMute())} />
+            <Mic onClick={() => toggleMute()} />
           )}
           {userVoiceState.volumeState == 1 ? (
-            <Headset onClick={() => dispatch(toggleVolumeState())} />
+            <Headset onClick={() => toggleVolumeState()} />
           ) : (
-            <HeadsetOff onClick={() => dispatch(toggleVolumeState())} />
+            <HeadsetOff onClick={() => toggleVolumeState()} />
           )}
         </Right>
       </Container>

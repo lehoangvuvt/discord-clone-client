@@ -4,7 +4,7 @@ import Button from "@/components/Button";
 import { ServerService } from "@/services/ServerService";
 import { UserService } from "@/services/UserService";
 import { IServerInvitationDetails } from "@/types/api.type";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
@@ -52,7 +52,7 @@ const InvitationClient = ({
 }: {
   invitationDetails: IServerInvitationDetails | null;
 }) => {
-  const { setUserInfo } = useUserInfo();
+  const { setUserInfo } = useStore();
   const router = useRouter();
 
   const handleAcceptInvitation = async () => {

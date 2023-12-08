@@ -151,6 +151,13 @@ export interface IUserRelationship extends IBaseData {
   type: string;
 }
 
+export interface IActivity extends IBaseData {
+  actor_id: string;
+  object_id: string;
+  verb: string;
+  isRead: boolean;
+}
+
 export type SendFriendRequestErrorReasonEnum =
   | "NOT_FOUND"
   | "FAILED"
@@ -184,3 +191,11 @@ export type IUseServerInvitationResponse =
       status: "Error";
       errorMsg: string;
     };
+
+export enum ActivityVerbEnum {
+  ADD_FRIEND = "ADD_FRIEND",
+  INVITE_TO_SERVER = "INVITE_TO_SERVER",
+  MENTION = "MENTION",
+  NEW_MESSAGE_P2P = "NEW_MESSAGE_P2P",
+  NEW_MESSAGE_CHANNEL = "NEW_MESSAGE_CHANNEL",
+}

@@ -12,7 +12,7 @@ import { LoadingOutlined } from "@ant-design/icons";
 import Button from "../Button";
 import { FileService } from "@/services/FileService";
 import { UserService } from "@/services/UserService";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 
 const Container = styled.div`
   position: fixed;
@@ -225,7 +225,7 @@ const UserDetailsPopup = ({
   const [isUpdating, setUpdating] = useState(false);
   const [canSave, setCanSave] = useState(false);
   const dispatch = useDispatch();
-  const { setUserInfo } = useUserInfo();
+  const { setUserInfo } = useStore();
   const uploadAvatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleChangeField = (

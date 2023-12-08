@@ -17,10 +17,15 @@ export const ServerService = {
     data: ICreateServerData
   ): Promise<IApiResponse<IServer, string>> {
     try {
-      const response = await baseAxios.post<
+      const response = await baseAxios<
         ICreateServerData,
         AxiosResponse<IServer>
-      >(`/servers/create`, data, { withCredentials: true });
+      >({
+        url: `/servers/create`,
+        data,
+        method: "POST",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -46,10 +51,11 @@ export const ServerService = {
     serverId: string
   ): Promise<IApiResponse<IServerInfo, string>> {
     try {
-      const response = await baseAxios.get<null, AxiosResponse<IServerInfo>>(
-        `/servers/${serverId}`,
-        { withCredentials: true }
-      );
+      const response = await baseAxios<null, AxiosResponse<IServerInfo>>({
+        url: `/servers/${serverId}`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -75,9 +81,11 @@ export const ServerService = {
     serverId: string
   ): Promise<IApiResponse<IChannel[], string>> {
     try {
-      const response = await baseAxios.get<null, AxiosResponse<IChannel[]>>(
-        `/servers/get-channels/${serverId}`
-      );
+      const response = await baseAxios<null, AxiosResponse<IChannel[]>>({
+        url: `/servers/get-channels/${serverId}`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -103,10 +111,11 @@ export const ServerService = {
     serverId: string
   ): Promise<IApiResponse<IUserServer, string>> {
     try {
-      const response = await baseAxios.delete<null, AxiosResponse<IUserServer>>(
-        `/servers/leave/serverId=${serverId}`,
-        { withCredentials: true }
-      );
+      const response = await baseAxios<null, AxiosResponse<IUserServer>>({
+        url: `/servers/leave/serverId=${serverId}`,
+        method: "DELETE",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -132,10 +141,12 @@ export const ServerService = {
     invitation_short_id: string
   ): Promise<IApiResponse<IServerInvitationDetails, string>> {
     try {
-      const response = await baseAxios.get<
+      const response = await baseAxios<
         null,
         AxiosResponse<IServerInvitationDetails>
-      >(`/servers/server-invitation/${invitation_short_id}`, {
+      >({
+        url: `/servers/server-invitation/${invitation_short_id}`,
+        method: "GET",
         withCredentials: true,
       });
       if (response.status === 200) {
@@ -163,10 +174,12 @@ export const ServerService = {
     invitation_short_id: string
   ): Promise<IApiResponse<IUseServerInvitationResponse, string>> {
     try {
-      const response = await baseAxios.get<
+      const response = await baseAxios<
         null,
         AxiosResponse<IUseServerInvitationResponse>
-      >(`/servers/use/server-invitation/${invitation_short_id}`, {
+      >({
+        url: `/servers/use/server-invitation/${invitation_short_id}`,
+        method: "GET",
         withCredentials: true,
       });
       if (response.status === 200 && response.data.status === "Success") {

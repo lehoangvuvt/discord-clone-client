@@ -13,6 +13,8 @@ import {
   RelationshipTypeEnum,
   IUserRelationship,
   IGetMessageHistoryResponse,
+  IActivity,
+  ActivityVerbEnum,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
@@ -20,10 +22,10 @@ import { AxiosResponse } from "axios";
 export const UserService = {
   async login(data: ILoginData): Promise<IApiResponse<IUserInfo, string>> {
     try {
-      const response = await baseAxios.post<
-        ILoginData,
-        AxiosResponse<IUserInfo>
-      >("/users/login", data, {
+      const response = await baseAxios<ILoginData, AxiosResponse<IUserInfo>>({
+        url: "/users/login",
+        data,
+        method: "POST",
         withCredentials: true,
       });
       if (response.status === 200) {
@@ -50,10 +52,12 @@ export const UserService = {
   async register(
     data: IRegisterData
   ): Promise<IApiResponse<IUserInfo, string>> {
-    const response = await baseAxios.post<
-      IRegisterData,
-      AxiosResponse<IUserInfo>
-    >("/users/register", data);
+    const response = await baseAxios<IRegisterData, AxiosResponse<IUserInfo>>({
+      method: "POST",
+      url: "/users/register",
+      data,
+      withCredentials: true,
+    });
     if (response.status === 200) {
       return {
         status: "Success",
@@ -71,10 +75,15 @@ export const UserService = {
   async uploadFile(
     data: IUploadFile
   ): Promise<IApiResponse<IUploadFileResponse, string>> {
-    const response = await baseAxios.post<
+    const response = await baseAxios<
       IUploadFile,
       AxiosResponse<IUploadFileResponse>
-    >("/files/upload", data);
+    >({
+      method: "POST",
+      url: "/files/upload",
+      data,
+      withCredentials: true,
+    });
     if (response.status === 200) {
       return {
         status: "Success",
@@ -91,10 +100,11 @@ export const UserService = {
   },
   async athentication(): Promise<IApiResponse<IUserInfo, string>> {
     try {
-      const response = await baseAxios.get<null, AxiosResponse<IUserInfo>>(
-        `/users/authentication`,
-        { withCredentials: true }
-      );
+      const response = await baseAxios<null, AxiosResponse<IUserInfo>>({
+        method: "GET",
+        url: `/users/authentication`,
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -120,10 +130,11 @@ export const UserService = {
     IApiResponse<IUserInfo, string>
   > {
     try {
-      const response = await baseAxios.get<null, AxiosResponse<IUserInfo>>(
-        `/users/refresh-token`,
-        { withCredentials: true }
-      );
+      const response = await baseAxios<null, AxiosResponse<IUserInfo>>({
+        url: `/users/refresh-token`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -149,10 +160,15 @@ export const UserService = {
     userInfo: IUpdateUserInfo
   ): Promise<IApiResponse<IUserInfo, string>> {
     try {
-      const response = await baseAxios.post<
+      const response = await baseAxios<
         IUpdateUserInfo,
         AxiosResponse<IUserInfo>
-      >(`/users/update`, userInfo, { withCredentials: true });
+      >({
+        url: `/users/update`,
+        method: "POST",
+        data: userInfo,
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -176,10 +192,11 @@ export const UserService = {
   },
   async getFriendsList(): Promise<IApiResponse<IUserInfoLite[], string>> {
     try {
-      const response = await baseAxios.get<
-        null,
-        AxiosResponse<IUserInfoLite[]>
-      >(`/users/friends`, { withCredentials: true });
+      const response = await baseAxios<null, AxiosResponse<IUserInfoLite[]>>({
+        url: `/users/friends`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -205,10 +222,14 @@ export const UserService = {
     IApiResponse<IGetUserPendingRequestsReponse, string>
   > {
     try {
-      const response = await baseAxios.get<
+      const response = await baseAxios<
         null,
         AxiosResponse<IGetUserPendingRequestsReponse>
-      >(`/users/pending-requests`, { withCredentials: true });
+      >({
+        url: `/users/pending-requests`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -236,14 +257,17 @@ export const UserService = {
     IApiResponse<ISendFriendRequestResponse, SendFriendRequestErrorReasonEnum>
   > {
     try {
-      const response = await baseAxios.post<
+      const response = await baseAxios<
         { targetUsername: string },
         AxiosResponse<ISendFriendRequestResponse>
-      >(
-        `/users/send-friend-request`,
-        { targetUsername },
-        { withCredentials: true }
-      );
+      >({
+        method: "POST",
+        url: `/users/send-friend-request`,
+        data: {
+          targetUsername,
+        },
+        withCredentials: true,
+      });
       if (response.data.status === "Success") {
         return {
           status: "Success",
@@ -267,10 +291,10 @@ export const UserService = {
   },
   async logout(): Promise<IApiResponse<{ message: string }, string>> {
     try {
-      const response = await baseAxios.get<
+      const response = await baseAxios<
         null,
         AxiosResponse<{ message: string }>
-      >(`/users/logout`, { withCredentials: true });
+      >({ url: `/users/logout`, method: "GET", withCredentials: true });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -297,14 +321,15 @@ export const UserService = {
     relationshipType: RelationshipTypeEnum
   ): Promise<IApiResponse<IUserRelationship, string>> {
     try {
-      const response = await baseAxios.post<
+      const response = await baseAxios<
         { requestId: string; relationshipType: RelationshipTypeEnum },
         AxiosResponse<IUserRelationship>
-      >(
-        `/users/handle-friend-request`,
-        { requestId, relationshipType },
-        { withCredentials: true }
-      );
+      >({
+        url: `/users/handle-friend-request`,
+        method: "POST",
+        data: { requestId, relationshipType },
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -332,13 +357,14 @@ export const UserService = {
     limit: number = 20
   ): Promise<IApiResponse<IGetMessageHistoryResponse, string>> {
     try {
-      const response = await baseAxios.get<
+      const response = await baseAxios<
         null,
         AxiosResponse<IGetMessageHistoryResponse>
-      >(
-        `/users/message-history/targetUserId=${targetUserId}&page=${page}&limit=${limit}`,
-        { withCredentials: true }
-      );
+      >({
+        url: `/users/message-history/targetUserId=${targetUserId}&page=${page}&limit=${limit}`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -365,13 +391,14 @@ export const UserService = {
     datetime: string
   ): Promise<IApiResponse<IGetMessageHistoryResponse, string>> {
     try {
-      const response = await baseAxios.get<
+      const response = await baseAxios<
         null,
         AxiosResponse<IGetMessageHistoryResponse>
-      >(
-        `/users/new-messages/targetUserId=${targetUserId}&dateTime=${datetime}`,
-        { withCredentials: true }
-      );
+      >({
+        url: `/users/new-messages/targetUserId=${targetUserId}&dateTime=${datetime}`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -390,6 +417,39 @@ export const UserService = {
         status: "Error",
         errorCode: 400,
         errorMessage: "getP2PNewMessagesSinceDT history failed",
+      };
+    }
+  },
+  async getActivities(): Promise<
+    IApiResponse<{ [key in ActivityVerbEnum]: IActivity[] }, string>
+  > {
+    try {
+      const response = await baseAxios<
+        null,
+        AxiosResponse<{ [key in ActivityVerbEnum]: IActivity[] }>
+      >({
+        url: `/users/activities`,
+        method: "GET",
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "getNotifications failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "getNotifications failed",
       };
     }
   },

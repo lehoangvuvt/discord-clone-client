@@ -12,14 +12,14 @@ import {
 import InputField from "@/components/InputField";
 import Button from "@/components/Button";
 import { UserService } from "@/services/UserService";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 
 const Login = () => {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorFields, setErrorFields] = useState<string[]>([]);
-  const { userInfo, setUserInfo } = useUserInfo();
+  const { userInfo, setUserInfo } = useStore();
   const dispatch = useDispatch();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {

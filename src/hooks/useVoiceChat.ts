@@ -1,22 +1,18 @@
 "use client";
 
-import { RootState } from "@/redux/store";
 import { Socket } from "@/services/socket";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 import { useCallback, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 
 const useVoiceChat = (socket: Socket, type: "channel" | "p2p") => {
-  const { userInfo } = useUserInfo();
+  const { userInfo } = useStore();
   const [serverId, setServerId] = useState<string | null>(null);
   const [inVoiceChannel, setInVoiceChannel] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
-  const userVoiceSetting = useSelector(
-    (state: RootState) => state.app.userVoiceState
-  );
+  const { userVoiceState } = useStore();
 
   const handleOnReceiveVoice = useCallback(
     (data: any) => {
@@ -100,12 +96,12 @@ const useVoiceChat = (socket: Socket, type: "channel" | "p2p") => {
 
   useEffect(() => {
     if (!mediaStream) return;
-    if (userVoiceSetting.mute) {
+    if (userVoiceState.mute) {
       mediaStream.getAudioTracks()[0].enabled = false;
     } else {
       mediaStream.getAudioTracks()[0].enabled = true;
     }
-  }, [userVoiceSetting, mediaStream]);
+  }, [userVoiceState, mediaStream]);
 
   useEffect(() => {
     if (
@@ -116,13 +112,13 @@ const useVoiceChat = (socket: Socket, type: "channel" | "p2p") => {
       !handleOnReceiveVoice
     )
       return;
-    if (userVoiceSetting.volumeState !== 0) {
+    if (userVoiceState.volumeState !== 0) {
       socket.on(`receiveVoiceServer`, handleOnReceiveVoice);
     } else {
       socket.off(`receiveVoiceServer`);
     }
   }, [
-    userVoiceSetting,
+    userVoiceState,
     mediaRecorder,
     mediaStream,
     serverId,

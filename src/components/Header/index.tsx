@@ -1,19 +1,16 @@
 "use client";
 
-import { RootState } from "@/redux/store";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import Popover from "../Popover";
 import { useEffect, useRef, useState } from "react";
 import { SeparateLine } from "../StyledComponents";
-import { setChannelId, setServer } from "@/redux/slices/appSlice";
 import { useRouter } from "next/navigation";
 import { ServerService } from "@/services/ServerService";
 import { UserService } from "@/services/UserService";
 import Popup from "../Popup";
 import { IServerInfo, IServerInvitation } from "@/types/api.type";
 import Button from "../Button";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 
 const Container = styled.div`
   width: calc(100% - 70px);
@@ -156,9 +153,7 @@ const ServerPopup = ({
   onLeaveFinished: (isSuccess: boolean) => void;
   onClickInvite: () => void;
 }) => {
-  const currentConnection = useSelector(
-    (state: RootState) => state.app.currentConnection
-  );
+  const { currentConnection } = useStore();
   const handleLeaveServer = async () => {
     if (
       !currentConnection ||
@@ -188,20 +183,17 @@ const ServerPopup = ({
 };
 
 const Header = () => {
-  const dispatch = useDispatch();
+  const { setServer, setChannelId, currentConnection } = useStore();
   const router = useRouter();
   const [isOpenServerInfo, setOpenServerInfo] = useState(false);
   const [selectedServerInfo, setSelectedServerInfo] =
     useState<IServerInfo | null>(null);
-  const currentConnection = useSelector(
-    (state: RootState) => state.app.currentConnection
-  );
   const [isOpenServerPopup, setOpenServerPopup] = useState(false);
   const [isCopied, setCopied] = useState(false);
   const serverInvitationInputRef = useRef<HTMLInputElement>(null);
   const [serverInvitation, setServerInvitation] =
     useState<IServerInvitation | null>(null);
-  const { userInfo, setUserInfo } = useUserInfo();
+  const { userInfo, setUserInfo } = useStore();
 
   const handleOnLeaveFinished = async (isSuccess: boolean) => {
     if (isSuccess) {
@@ -209,8 +201,8 @@ const Header = () => {
       if (authenticationResponse.status === "Success") {
         setOpenServerPopup(false);
         setUserInfo(authenticationResponse.data);
-        dispatch(setServer(null));
-        dispatch(setChannelId(null));
+        setServer(null);
+        setChannelId(null);
         router.push("/me/friends");
       }
     }

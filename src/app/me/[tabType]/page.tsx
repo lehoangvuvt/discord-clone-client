@@ -10,6 +10,7 @@ import Image from "next/image";
 import { NotificationDot, SeparateLine } from "@/components/StyledComponents";
 import SearchBar from "@/components/SearchBar";
 import {
+  ActivityVerbEnum,
   IUserInfoLite,
   IUserRelationship,
   RelationshipTypeEnum,
@@ -24,7 +25,7 @@ import { socket } from "@/services/socket";
 import ChatP2P from "./chat";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { setNotification } from "@/redux/slices/appSlice";
+import useStore from "@/zustand/useStore";
 
 const Container = styled.div`
   background: #313338;
@@ -312,15 +313,12 @@ const FriendsList = () => {
     | { status: "Error"; error: string }
     | { status: "Idle" }
   >({ status: "Idle" });
-  const notification = useSelector(
-    (state: RootState) => state.app.notification
-  );
+  const { notifications } = useStore();
 
   useEffect(() => {
     if (pendingRequests) {
       const { receiveFromUsers } = pendingRequests;
       const totalPending = receiveFromUsers.length;
-      dispatch(setNotification({ type: "FR", value: totalPending }));
     }
   }, [pendingRequests]);
 
@@ -346,7 +344,7 @@ const FriendsList = () => {
         queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
         const targetUserId = response.data.targetUser._id;
         socket.emit(
-          "sendFriendRequest",
+          "updateActivities",
           JSON.stringify({
             targetUserId,
           })
@@ -411,7 +409,14 @@ const FriendsList = () => {
     if (response.status === "Success") {
       queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
       queryClient.invalidateQueries([QUERY_KEY.GET_FRIENDS_LIST]);
-      dispatch(setNotification({ type: "FR", value: -1 }));
+
+      socket.emit(
+        "updateActivities",
+        JSON.stringify({
+          targetUserId: response.data.userSecondId,
+        })
+      );
+
       socket.emit(
         "updatePendingRequest",
         JSON.stringify({
@@ -468,8 +473,8 @@ const FriendsList = () => {
           className={currentView === "PENDING" ? "selected" : "not-selected"}
         >
           Pending{" "}
-          {notification.friendRequest > 0 && (
-            <NotificationDot>{notification.friendRequest}</NotificationDot>
+          {notifications && notifications.ADD_FRIEND.length > 0 && (
+            <NotificationDot>{notifications.ADD_FRIEND.length}</NotificationDot>
           )}
         </FilterItem>
         <AddFriendItem

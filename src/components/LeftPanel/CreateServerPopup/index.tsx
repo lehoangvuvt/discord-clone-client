@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
 import { getBase64FromFile } from "@/utils/file.utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -14,7 +12,7 @@ import Button from "@/components/Button";
 import { FileService } from "@/services/FileService";
 import { ServerService } from "@/services/ServerService";
 import { UserService } from "@/services/UserService";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 
 const Container = styled.div`
   position: fixed;
@@ -144,11 +142,10 @@ const CreateServerPopup = ({
   closePopup: () => void;
 }) => {
   const [serverName, setServerName] = useState("");
-  const { userInfo, setUserInfo } = useUserInfo();
+  const { userInfo, setUserInfo } = useStore();
   const [file, setFile] = useState<File | null>(null);
   const [base64Img, setBase64Img] = useState<string | null>(null);
   const serverAvatarInputRef = useRef<HTMLInputElement>(null);
-  const dispatch = useDispatch();
   const router = useRouter();
 
   useEffect(() => {

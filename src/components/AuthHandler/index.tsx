@@ -1,11 +1,12 @@
 "use client";
 
 import QUERY_KEY from "@/react-query/consts";
+import useActivities from "@/react-query/hooks/useActivities";
 import { setNotification } from "@/redux/slices/appSlice";
 import { RootState } from "@/redux/store";
 import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useQueryClient } from "react-query";
@@ -16,7 +17,14 @@ const AuthHandler = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
-  const { userInfo, setUserInfo } = useUserInfo();
+  const { userInfo, setUserInfo, setNotifications } = useStore();
+  const { activities, isError, isLoading } = useActivities(userInfo);
+
+  useEffect(() => {
+    if (activities) {
+      setNotifications(activities);
+    }
+  }, [activities]);
 
   useEffect(() => {
     if (!router || !pathname || !dispatch) return;
@@ -48,21 +56,17 @@ const AuthHandler = () => {
   }, []);
 
   const onConnect = () => {
-    socket.on("receiveFriendRequest", handleReceiveFriendRequest);
-    socket.on("receiveUpdatePendingRequest", handleReceiveUpdatePendingRequest);
+    socket.on("updateActivities", handleUpdateActivities);
   };
 
-  const handleReceiveFriendRequest = () => {
+  const handleUpdateActivities = () => {
+    queryClient.invalidateQueries([QUERY_KEY.GET_ACTIVITIES]);
     queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
-  };
-
-  const handleReceiveUpdatePendingRequest = () => {
     queryClient.invalidateQueries([QUERY_KEY.GET_FRIENDS_LIST]);
-    queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
   };
 
   const onDisconnect = () => {
-    socket.removeAllListeners();
+    socket.connect();
   };
 
   useEffect(() => {

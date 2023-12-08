@@ -12,10 +12,10 @@ export const FileService = {
   async uploadFile(
     data: IUploadFile
   ): Promise<IApiResponse<IUploadFileResponse, string>> {
-    const response = await baseAxios.post<
+    const response = await baseAxios<
       IUploadFile,
       AxiosResponse<IUploadFileResponse>
-    >("/files/upload", data);
+    >({ url: "/files/upload", data, method: "POST", withCredentials: true });
     if (response.status === 200) {
       return {
         status: "Success",
@@ -33,10 +33,14 @@ export const FileService = {
   async getAttachment(
     attachmentId: string
   ): Promise<IApiResponse<IAttachmentResponse, string>> {
-    const response = await baseAxios.get<
+    const response = await baseAxios<
       IAttachment,
       AxiosResponse<IAttachmentResponse>
-    >(`/attachments/${attachmentId}`);
+    >({
+      url: `/attachments/${attachmentId}`,
+      method: "GET",
+      withCredentials: true,
+    });
     if (response.status === 200) {
       return {
         status: "Success",

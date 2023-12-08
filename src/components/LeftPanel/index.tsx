@@ -9,13 +9,13 @@ import { RootState } from "@/redux/store";
 import AddIcon from "@mui/icons-material/Add";
 import Link from "next/link";
 import CreateServerPopup from "./CreateServerPopup";
-import { setChannelId, setServer } from "@/redux/slices/appSlice";
 import { NotificationDot, SeparateLine } from "../StyledComponents";
 import ThreePIcon from "@mui/icons-material/ThreeP";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
+import { ActivityVerbEnum } from "@/types/api.type";
 
 const Container = styled.div`
   position: absolute;
@@ -156,22 +156,18 @@ const ServersContainer = styled.div`
 
 const LeftPanel = () => {
   const params = useParams();
-  const { userInfo, setUserInfo } = useUserInfo();
+  const { userInfo, setUserInfo, setChannelId, setServer, currentConnection } =
+    useStore();
   const [isOpenCreateServer, setOpenCreateServer] = useState(false);
-  const notification = useSelector(
-    (state: RootState) => state.app.notification
-  );
+  const { notifications } = useStore();
   const dispatch = useDispatch();
-  const currentConnection = useSelector(
-    (state: RootState) => state.app.currentConnection
-  );
 
   const handleLogout = async () => {
     const response = await UserService.logout();
     if (response.status === "Success") {
       setUserInfo(null);
-      dispatch(setChannelId(null));
-      dispatch(setServer(null));
+      setChannelId(null);
+      setServer(null);
       window.location.href = "/login";
     }
   };
@@ -190,13 +186,13 @@ const LeftPanel = () => {
         ].filter((server) => server._id == params.serverId);
         if (params.serverId) {
           if (foundServers?.length > 0) {
-            dispatch(setServer(foundServers[0]));
-            dispatch(setChannelId(null));
+            setServer(foundServers[0]);
+            setChannelId(null);
           }
         }
       } else {
-        dispatch(setServer("@me"));
-        dispatch(setChannelId("@me"));
+        setServer("@me");
+        setChannelId("@me");
       }
     }
   }, [params, userInfo]);
@@ -239,7 +235,7 @@ const LeftPanel = () => {
         <TextAvatar>
           <ThreePIcon color="inherit" style={{ height: "100%" }} />{" "}
         </TextAvatar>
-        {notification.friendRequest > 0 && (
+        {notifications && notifications.ADD_FRIEND.length > 0 && (
           <NotificationDot
             style={{
               position: "absolute",
@@ -247,7 +243,7 @@ const LeftPanel = () => {
               right: "10px",
             }}
           >
-            {notification.friendRequest}
+            {notifications.ADD_FRIEND.length}
           </NotificationDot>
         )}
       </PanelItem>

@@ -7,13 +7,12 @@ import Tree from "@/components/Tree";
 import useVoiceChat from "@/hooks/useVoiceChat";
 import useMessageHistory from "@/react-query/hooks/useMessageHistory";
 import useNewMessages from "@/react-query/hooks/useNewMessages";
-import { setChannelId } from "@/redux/slices/appSlice";
 import { RootState } from "@/redux/store";
 import { FileService } from "@/services/FileService";
 import { socket } from "@/services/socket";
 import { IChannel, IMessage, IUploadFile, IUserInfo } from "@/types/api.type";
 import { getBase64FromFile } from "@/utils/file.utils";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 import { DeleteFilled, PlusCircleFilled } from "@ant-design/icons";
 import { VolumeUp, VolumeMute } from "@mui/icons-material";
 import AddIcon from "@mui/icons-material/Add";
@@ -337,11 +336,8 @@ const NewMsgNotify = styled.div`
 `;
 
 export default function Server({ params }: { params: any }) {
-  const dispatch = useDispatch();
-  const currentConnection = useSelector(
-    (state: RootState) => state.app.currentConnection
-  );
-  const { userInfo } = useUserInfo();
+  const { currentConnection, setChannelId } = useStore();
+  const { userInfo } = useStore();
   const [messageHistory, setMessageHistory] = useState<IMessage[]>([]);
   const messageHolderRef = useRef<HTMLDivElement | null>(null);
   const [onlineUsers, setOnineUsers] = useState<IUserInfo[]>([]);
@@ -453,7 +449,7 @@ export default function Server({ params }: { params: any }) {
     setAttachments([]);
     setMessageHistory([]);
     setOnineUsers([]);
-    dispatch(setChannelId(channel._id));
+    setChannelId(channel._id);
   };
 
   const getUsersByIds = async (data: string) => {

@@ -9,12 +9,14 @@ export const ChannelService = {
     limit: number = 20
   ): Promise<IApiResponse<IGetMessageHistoryResponse, string>> {
     try {
-      const response = await baseAxios.get<
+      const response = await baseAxios<
         null,
         AxiosResponse<IGetMessageHistoryResponse>
-      >(
-        `/channels/message-history/channelId=${channelId}&page=${page}&limit=${limit}`
-      );
+      >({
+        url: `/channels/message-history/channelId=${channelId}&page=${page}&limit=${limit}`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",
@@ -41,10 +43,14 @@ export const ChannelService = {
     datetime: string
   ): Promise<IApiResponse<IGetMessageHistoryResponse, string>> {
     try {
-      const response = await baseAxios.get<
+      const response = await baseAxios<
         null,
         AxiosResponse<IGetMessageHistoryResponse>
-      >(`/channels/new-messages/channelId=${channelId}&datetime=${datetime}`);
+      >({
+        url: `/channels/new-messages/channelId=${channelId}&datetime=${datetime}`,
+        method: "GET",
+        withCredentials: true,
+      });
       if (response.status === 200) {
         return {
           status: "Success",

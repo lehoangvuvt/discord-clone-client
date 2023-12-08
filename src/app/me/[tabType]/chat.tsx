@@ -18,7 +18,7 @@ import {
   IUserInfoLite,
 } from "@/types/api.type";
 import { getBase64FromFile } from "@/utils/file.utils";
-import useUserInfo from "@/zustand/useUserInfo";
+import useStore from "@/zustand/useStore";
 import { DeleteFilled, PlusCircleFilled } from "@ant-design/icons";
 import { VolumeUp, VolumeMute } from "@mui/icons-material";
 import CallIcon from "@mui/icons-material/Call";
@@ -371,7 +371,7 @@ export default function ChatP2P() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
-  const { userInfo } = useUserInfo();
+  const { userInfo } = useStore();
   const [messageHistory, setMessageHistory] = useState<IMessage[]>([]);
   const messageHolderRef = useRef<HTMLDivElement | null>(null);
   const [emoId, setEmoId] = useState(1);
