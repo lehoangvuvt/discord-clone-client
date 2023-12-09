@@ -15,6 +15,7 @@ import {
   IGetMessageHistoryResponse,
   IActivity,
   ActivityVerbEnum,
+  IMessage,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
@@ -450,6 +451,45 @@ export const UserService = {
         status: "Error",
         errorCode: 400,
         errorMessage: "getNotifications failed",
+      };
+    }
+  },
+  async sendMessage(
+    message: string,
+    fileIds: string[],
+    userId: string,
+    channelId: string
+  ): Promise<IApiResponse<IMessage, string>> {
+    try {
+      const response = await baseAxios<null, AxiosResponse<IMessage>>({
+        url: `/users/send-message`,
+        method: "POST",
+        data: {
+          message,
+          channelId,
+          userId,
+          fileIds,
+        },
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "sendMessage failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "sendMessage failed",
       };
     }
   },

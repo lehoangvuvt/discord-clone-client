@@ -343,12 +343,6 @@ const FriendsList = () => {
       if (response.data.status === "Success") {
         queryClient.invalidateQueries([QUERY_KEY.GET_PENDING_REQUESTS]);
         const targetUserId = response.data.targetUser._id;
-        socket.emit(
-          "updateActivities",
-          JSON.stringify({
-            targetUserId,
-          })
-        );
         setSendFRState({
           status: "Success",
         });

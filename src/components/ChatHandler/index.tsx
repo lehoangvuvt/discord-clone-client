@@ -194,7 +194,11 @@ const UploadItemController = styled.div`
 
 type Props = {
   messageHistory: IMessage[];
-  sendMessage: (message: string, fileIds: string[], userId: string) => Promise<any>;
+  sendMessage: (
+    message: string,
+    fileIds: string[],
+    userId: string
+  ) => Promise<any>;
   style?: React.CSSProperties;
 };
 
@@ -250,18 +254,7 @@ const ChatHandler = ({ messageHistory, sendMessage, style }: Props) => {
           }
         });
         await Promise.all(uploadFiles);
-
         sendMessage(innerHTML, fileIds, userInfo._id);
-
-        // socket.emit(
-        //   "send",
-        //   JSON.stringify({
-        //     channelId: currentConnection.channelId,
-        //     message: innerHTML,
-        //     userId: userInfo._id,
-        //     fileIds: fileIds,
-        //   })
-        // );
         setAttachments([]);
         msgInputRef.current.innerHTML = "";
       } else {

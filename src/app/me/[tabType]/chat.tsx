@@ -311,7 +311,7 @@ export default function ChatP2P() {
     }
   }, [messageHistory, lastFetchMessageDT]);
 
-  const handleSendMessage = (
+  const handleSendMessage = async (
     message: string,
     fileIds: string[],
     userId: string

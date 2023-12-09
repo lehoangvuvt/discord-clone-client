@@ -6,6 +6,7 @@ import Tree from "@/components/Tree";
 import useVoiceChat from "@/hooks/useVoiceChat";
 import useMessageHistory from "@/react-query/hooks/useMessageHistory";
 import useNewMessages from "@/react-query/hooks/useNewMessages";
+import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
 import { IChannel, IMessage, IUserInfo } from "@/types/api.type";
 import useStore from "@/zustand/useStore";
@@ -307,26 +308,13 @@ export default function Server({ params }: { params: any }) {
     fileIds: string[],
     userId: string
   ) => {
-    await axios({
-      url: "http://localhost:3001/users/send-message",
-      method: "POST",
-      withCredentials: true,
-      data: {
-        message,
-        channelId: currentConnection.channelId,
-        userId,
-        fileIds,
-      },
-    });
-    // socket.emit(
-    //   "send",
-    //   JSON.stringify({
-    //     channelId: currentConnection.channelId,
-    //     message,
-    //     userId,
-    //     fileIds,
-    //   })
-    // );
+    if (!currentConnection.channelId) return;
+    const response = await UserService.sendMessage(
+      message,
+      fileIds,
+      userId,
+      currentConnection.channelId
+    );
   };
 
   return (
