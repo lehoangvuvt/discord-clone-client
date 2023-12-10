@@ -5,6 +5,7 @@ import { SeparateLine } from "@/components/StyledComponents";
 import QUERY_KEY from "@/react-query/consts";
 import useFriendsList from "@/react-query/hooks/useFriendsList";
 import useP2PMessageHistory from "@/react-query/hooks/useP2PMessageHistory";
+import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
 import { IMessage, IUserInfoLite } from "@/types/api.type";
 import useStore from "@/zustand/useStore";
@@ -318,15 +319,7 @@ export default function ChatP2P() {
   ) => {
     const targetUserId = searchParams.get("id");
     if (socket && targetUserId) {
-      socket.emit(
-        "sendP2PMessage",
-        JSON.stringify({
-          message,
-          userId,
-          fileIds,
-          receiverId: targetUserId,
-        })
-      );
+      await UserService.sendP2PMessage(message, userId, fileIds, targetUserId);
     } else {
       alert("Please input message");
     }

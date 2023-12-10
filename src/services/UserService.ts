@@ -493,4 +493,43 @@ export const UserService = {
       };
     }
   },
+  async sendP2PMessage(
+    message: string,
+    userId: string,
+    fileIds: string[],
+    receiverId: string
+  ): Promise<IApiResponse<IMessage, string>> {
+    try {
+      const response = await baseAxios<null, AxiosResponse<IMessage>>({
+        url: `/users/send-p2p-message`,
+        method: "POST",
+        data: {
+          message,
+          userId,
+          fileIds,
+          receiverId,
+        },
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "sendP2PMessage failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "sendP2PMessage failed",
+      };
+    }
+  },
 };
