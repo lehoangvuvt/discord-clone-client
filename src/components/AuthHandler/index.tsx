@@ -2,15 +2,14 @@
 
 import QUERY_KEY from "@/react-query/consts";
 import useActivities from "@/react-query/hooks/useActivities";
-import { setNotification } from "@/redux/slices/appSlice";
-import { RootState } from "@/redux/store";
+import useAuth from "@/react-query/hooks/useAuth";
 import { UserService } from "@/services/UserService";
 import { socket } from "@/services/socket";
 import useStore from "@/zustand/useStore";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useQueryClient } from "react-query";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 const AuthHandler = () => {
   const queryClient = useQueryClient();
@@ -18,7 +17,8 @@ const AuthHandler = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { userInfo, setUserInfo, setNotifications } = useStore();
-  const { activities, isError, isLoading } = useActivities(userInfo);
+  const { activities, isError } = useActivities(userInfo);
+  const { authenticationData, isLoading } = useAuth();
 
   useEffect(() => {
     if (activities) {
@@ -26,34 +26,34 @@ const AuthHandler = () => {
     }
   }, [activities]);
 
+  const getAccessTokenByRefreshToken = async () => {
+    const getAccessTokenResponse =
+      await UserService.getAccessTokenByRefreshToken();
+    if (getAccessTokenResponse.status === "Success") {
+      setUserInfo(getAccessTokenResponse.data);
+      router.push("/me/friends");
+    } else {
+      socket.removeAllListeners();
+      socket.disconnect();
+      if (pathname !== "/register") {
+        router.push("/login");
+      }
+    }
+  };
+
   useEffect(() => {
     if (!router || !pathname || !dispatch) return;
-
-    const authentication = async () => {
-      const authenticationResponse = await UserService.athentication();
-      if (authenticationResponse.status === "Success") {
-        setUserInfo(authenticationResponse.data);
+    if (!isLoading) {
+      if (authenticationData) {
+        setUserInfo(authenticationData);
         if (!pathname.includes("/servers") && !pathname.includes("/invite")) {
           router.push("/me/friends");
         }
       } else {
-        const getAccessTokenResponse =
-          await UserService.getAccessTokenByRefreshToken();
-        if (getAccessTokenResponse.status === "Success") {
-          setUserInfo(getAccessTokenResponse.data);
-          router.push("/me/friends");
-        } else {
-          socket.removeAllListeners();
-          socket.disconnect();
-          if (pathname !== "/register") {
-            router.push("/login");
-          }
-        }
+        getAccessTokenByRefreshToken();
       }
-    };
-
-    authentication();
-  }, []);
+    }
+  }, [authenticationData, isLoading]);
 
   const onConnect = () => {
     socket.on("updateActivities", handleUpdateActivities);
