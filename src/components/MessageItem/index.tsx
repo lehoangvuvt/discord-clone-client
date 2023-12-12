@@ -13,6 +13,15 @@ const Container = styled.div`
   display: flex;
   flex-flow: row wrap;
   box-sizing: border-box;
+  animation: msgItemAppear 0.2s ease;
+  @keyframes msgItemAppear {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 `;
 
 const MessageItemLeft = styled.div`

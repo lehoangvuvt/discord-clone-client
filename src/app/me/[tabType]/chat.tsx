@@ -187,11 +187,8 @@ export default function ChatP2P() {
   const [targetUserInfo, setTargetUserInfo] = useState<IUserInfoLite | null>(
     null
   );
-  const { data: useMessageHistoryData } = useP2PMessageHistory(
-    searchParams.get("id"),
-    currentPage,
-    100
-  );
+  const { data: useMessageHistoryData, isLoading: isLoadingMessageHistory } =
+    useP2PMessageHistory(searchParams.get("id"), currentPage, 100);
   // const {
   //   start: startVoice,
   //   stop: stopVoice,
@@ -353,6 +350,7 @@ export default function ChatP2P() {
           </div>
         </Header>
         <ChatHandler
+          isLoading={isLoadingMessageHistory}
           style={{ height: "calc(100% - 56px)", width: "100%" }}
           messageHistory={messageHistory}
           sendMessage={handleSendMessage}

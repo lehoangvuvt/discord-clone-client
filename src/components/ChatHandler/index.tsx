@@ -1,5 +1,6 @@
 "use client";
 
+import PropagateLoader from "react-spinners/PropagateLoader";
 import { socket } from "@/services/socket";
 import { IMessage, IUploadFile } from "@/types/api.type";
 import useStore from "@/zustand/useStore";
@@ -194,6 +195,7 @@ const UploadItemController = styled.div`
 
 type Props = {
   messageHistory: IMessage[];
+  isLoading: boolean;
   sendMessage: (
     message: string,
     fileIds: string[],
@@ -202,7 +204,12 @@ type Props = {
   style?: React.CSSProperties;
 };
 
-const ChatHandler = ({ messageHistory, sendMessage, style }: Props) => {
+const ChatHandler = ({
+  messageHistory,
+  sendMessage,
+  isLoading,
+  style,
+}: Props) => {
   const { currentConnection, setChannelId, userInfo } = useStore();
   const messageHolderRef = useRef<HTMLDivElement | null>(null);
   const [emoId, setEmoId] = useState(1);
@@ -388,7 +395,27 @@ const ChatHandler = ({ messageHistory, sendMessage, style }: Props) => {
   return (
     <MessagesContainer style={style}>
       <MessagesHolder onScroll={handleScroll} ref={messageHolderRef}>
-        {messageHistory &&
+        {isLoading && (
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            <PropagateLoader
+              color={"#5865f2"}
+              loading={true}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+          </div>
+        )}
+
+        {!isLoading &&
+          messageHistory &&
           messageHistory.length > 0 &&
           messageHistory.map((message, i) => (
             <MessageItem key={message._id} data={message} />

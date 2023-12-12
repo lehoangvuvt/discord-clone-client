@@ -156,11 +156,8 @@ export default function Server({ params }: { params: any }) {
   const [onlineUsers, setOnineUsers] = useState<IUserInfo[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [openCreateChannelPopup, setOpenCreateChannelPopup] = useState(false);
-  const { data: useMessageHistoryData } = useMessageHistory(
-    currentConnection.channelId,
-    currentPage,
-    100
-  );
+  const { data: useMessageHistoryData, isLoading: isLoadingMessageHistory } =
+    useMessageHistory(currentConnection.channelId, currentPage, 100);
   const {
     start: startVoice,
     stop: stopVoice,
@@ -397,6 +394,7 @@ export default function Server({ params }: { params: any }) {
       {currentConnection?.channelId && (
         <>
           <ChatHandler
+            isLoading={isLoadingMessageHistory}
             messageHistory={messageHistory}
             sendMessage={handleSendMessage}
           />
