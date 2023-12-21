@@ -180,8 +180,8 @@ const UploadItemController = styled.div`
   box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
   font-size: 20px;
   color: #f50057;
-  padding: 5px 10px;
   box-sizing: border-box;
+  padding: 0px 7px 5px 7px;
   span {
     cursor: pointer;
     transition: all 0.15s ease;

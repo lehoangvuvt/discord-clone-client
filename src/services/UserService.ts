@@ -16,6 +16,9 @@ import {
   IActivity,
   ActivityVerbEnum,
   IMessage,
+  IPendingRegister,
+  IVerifyOTPRes,
+  VerifyErrorTypeEnum,
 } from "@/types/api.type";
 import baseAxios from "./baseAxios";
 import { AxiosResponse } from "axios";
@@ -52,8 +55,11 @@ export const UserService = {
   },
   async register(
     data: IRegisterData
-  ): Promise<IApiResponse<IUserInfo, string>> {
-    const response = await baseAxios<IRegisterData, AxiosResponse<IUserInfo>>({
+  ): Promise<IApiResponse<IPendingRegister, string>> {
+    const response = await baseAxios<
+      IRegisterData,
+      AxiosResponse<IPendingRegister>
+    >({
       method: "POST",
       url: "/users/register",
       data,
@@ -529,6 +535,98 @@ export const UserService = {
         status: "Error",
         errorCode: 400,
         errorMessage: "sendP2PMessage failed",
+      };
+    }
+  },
+  async getPendingRegisterByURL(
+    url: string
+  ): Promise<IApiResponse<IPendingRegister, string>> {
+    try {
+      const response = await baseAxios<null, AxiosResponse<IPendingRegister>>({
+        url: `/users/pending-registers/${url}`,
+        method: "GET",
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "getPendingRegisterByURL failed",
+        };
+      }
+    } catch (e) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "getPendingRegisterByURL failed",
+      };
+    }
+  },
+  async verify(
+    otpCode: number,
+    url: string
+  ): Promise<IApiResponse<IUserInfoLite, VerifyErrorTypeEnum>> {
+    try {
+      const response = await baseAxios<null, AxiosResponse<IVerifyOTPRes>>({
+        url: `/users/verify/${url}`,
+        method: "POST",
+        data: {
+          otpCode,
+        },
+        withCredentials: true,
+      });
+      if (response.data.status === "Success") {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: response.data.errorType,
+        };
+      }
+    } catch (e: any) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: e.response.data.errorType,
+      };
+    }
+  },
+  async resend(url: string): Promise<IApiResponse<IPendingRegister, string>> {
+    try {
+      const response = await baseAxios<null, AxiosResponse<IPendingRegister>>({
+        method: "POST",
+        url: `users/resend/${url}`,
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        return {
+          status: "Success",
+          statusCode: 200,
+          data: response.data,
+        };
+      } else {
+        return {
+          status: "Error",
+          errorCode: response.status,
+          errorMessage: "resend failed",
+        };
+      }
+    } catch (err) {
+      return {
+        status: "Error",
+        errorCode: 400,
+        errorMessage: "resend failed",
       };
     }
   },

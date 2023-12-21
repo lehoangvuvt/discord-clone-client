@@ -35,7 +35,7 @@ const AuthHandler = () => {
     } else {
       socket.removeAllListeners();
       socket.disconnect();
-      if (pathname !== "/register") {
+      if (pathname !== "/register" && !pathname.includes("verify")) {
         router.push("/login");
       }
     }

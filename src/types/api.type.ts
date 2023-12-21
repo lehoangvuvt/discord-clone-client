@@ -31,6 +31,7 @@ export type IRegisterData = {
   username: string;
   password: string;
   name: string;
+  email: string;
 };
 
 export type IBaseData = {
@@ -39,6 +40,25 @@ export type IBaseData = {
   updatedAt: string;
   __v: number;
 };
+
+export interface IPendingRegister extends IBaseData {
+  username: string;
+  email: string;
+  url: string;
+}
+
+export interface IPendingRegisterWithOTP extends IBaseData {
+  username: string;
+  email: string;
+  url: string;
+  otp: IPendingRegisterOTP;
+}
+
+export interface IPendingRegisterOTP extends IBaseData {
+  pending_register_id: string;
+  code: string;
+  expiredAt: string;
+}
 
 export interface IServer extends IBaseData {
   name: string;
@@ -199,3 +219,20 @@ export enum ActivityVerbEnum {
   NEW_MESSAGE_P2P = "NEW_MESSAGE_P2P",
   NEW_MESSAGE_CHANNEL = "NEW_MESSAGE_CHANNEL",
 }
+
+export enum VerifyErrorTypeEnum {
+  EXPIRED = "EXPIRED",
+  INVALID_OTP = "INVALID_OTP",
+  INVALID_URL = "INVALID_URL",
+  OTHERS = "OTHERS",
+}
+
+export type IVerifyOTPRes =
+  | {
+      status: "Success";
+      data: IUserInfoLite;
+    }
+  | {
+      status: "Error";
+      errorType: VerifyErrorTypeEnum;
+    };

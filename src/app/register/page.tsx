@@ -15,6 +15,7 @@ import { FormEvent, useState } from "react";
 const Login = () => {
   const router = useRouter();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
@@ -26,10 +27,11 @@ const Login = () => {
       username,
       password,
       name,
+      email,
     };
     const response = await UserService.register(data);
     if (response.status === "Success") {
-      router.push("/login");
+      router.push(`/verify/${response.data.url}`);
     } else {
       alert("Error");
     }
@@ -58,6 +60,27 @@ const Login = () => {
               validateRules: {
                 minLength: 5,
               },
+            },
+          }}
+        />
+
+        <InputField
+          onValidChange={(fieldName, isValid) => {
+            if (!isValid) {
+              setErrorFields([...errorFields, fieldName]);
+            } else {
+              setErrorFields((errorFields) =>
+                errorFields.filter((errorField) => errorField !== fieldName)
+              );
+            }
+          }}
+          onChange={(value) => setEmail(value)}
+          field={{
+            fieldName: "Email",
+            required: true,
+            value: email,
+            fieldProperty: {
+              type: "text",
             },
           }}
         />

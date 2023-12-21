@@ -249,7 +249,7 @@ const LeftPanel = () => {
       </PanelItem>
       <SeparateLine
         width="55%"
-        height="2px"
+        height="1px"
         color="rgba(255,255,255,0.2)"
         style={{ borderRadius: "6px" }}
       />
@@ -294,7 +294,7 @@ const LeftPanel = () => {
       />
       <SeparateLine
         width="55%"
-        height="2px"
+        height="1px"
         color="rgba(255,255,255,0.2)"
         style={{ borderRadius: "6px" }}
       />

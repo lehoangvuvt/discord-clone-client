@@ -286,6 +286,8 @@ export default function Server({ params }: { params: any }) {
       if (data.length > 0) {
         setMessageHistory(data);
         setLastFetchMessageDT(data[data.length - 1].createdAt);
+      } else {
+        setLastFetchMessageDT(new Date().toISOString());
       }
     }
   }, [useMessageHistoryData]);
