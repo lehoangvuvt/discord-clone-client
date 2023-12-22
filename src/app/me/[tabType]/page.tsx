@@ -10,7 +10,6 @@ import Image from "next/image";
 import { NotificationDot, SeparateLine } from "@/components/StyledComponents";
 import SearchBar from "@/components/SearchBar";
 import {
-  ActivityVerbEnum,
   IUserInfoLite,
   IUserRelationship,
   RelationshipTypeEnum,

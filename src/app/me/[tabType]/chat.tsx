@@ -141,21 +141,21 @@ const UserInfo = styled.div`
 `;
 
 const UserInfoSection = styled.div`
-  display: flex
+  display: flex;
   flex-flow: column wrap;
 
-  h1{
+  h1 {
     color: white;
     font-weight: 700;
     font-size: 15px;
   }
   h2 {
     color: white;
-    font-weight:700;
+    font-weight: 700;
     font-size: 12px;
   }
   p {
-    color: rgba(255,255,255,0.65);
+    color: rgba(255, 255, 255, 0.65);
     font-size: 14px;
     margin-top: 2px;
   }
@@ -163,7 +163,7 @@ const UserInfoSection = styled.div`
     border: none;
     outline: none;
     background: transparent;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
     font-size: 12px;
     width: 100%;
     margin-top: 5px;

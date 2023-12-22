@@ -91,6 +91,8 @@ const MessageInput = styled.div`
   font-size: 14px;
   padding-right: 10px;
   margin-top: 4px;
+  display: flex;
+  flex-flow: row wrap;
 `;
 
 const EmojiSelector = styled.div<{ $isOpenEmoji: boolean }>`
@@ -220,7 +222,7 @@ const ChatHandler = ({
 
   const handleOnClickEmoji = (emojiId: number) => {
     if (msgInputRef && msgInputRef.current) {
-      const spanImage = `<img style="width: 18px; height: 18px; margin-left: 2px; margin-right: 2px;" src='/images/emoji/icon (${emojiId}).png'/>`;
+      const spanImage = `<img style="width: 25px; height: 25px; margin-left: 2px; margin-right: 2px;" src='/images/emoji/icon (${emojiId}).png' />`;
       msgInputRef.current.innerHTML += spanImage;
       setOpenEmoji(false);
     }

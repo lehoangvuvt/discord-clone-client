@@ -70,6 +70,9 @@ const MessageItemRightBottom = styled.div`
   font-weight: 400;
   font-size: 14px;
   line-height: 1.25;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-end;
   img {
     max-width: 100%;
     max-height: 200px;

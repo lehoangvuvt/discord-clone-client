@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
-import "./global.css";
 import ReduxProvider from "@/redux/ReduxProvider";
 import AuthHandler from "@/components/AuthHandler";
 import StyledComponentsRegistry from "./registry";
+import "./global.css";
 
 const font = Open_Sans({ subsets: ["latin"], display: "swap" });
 
@@ -21,9 +21,7 @@ export default function RootLayout({
       <body className={font.className}>
         <ReduxProvider>
           <AuthHandler />
-          <StyledComponentsRegistry>
-          {children}
-          </StyledComponentsRegistry>
+          <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
         </ReduxProvider>
       </body>
     </html>
