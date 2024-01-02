@@ -18,9 +18,10 @@ const useVoiceChat = (socket: Socket, type: "channel" | "p2p") => {
     (data: any) => {
       if (!userInfo) return;
       const formattedData = JSON.parse(data);
-      const audio = new Audio(formattedData.base64);
-      audio.play();
-      if (formattedData.senderId !== userInfo._id) {
+      const { base64, senderId } = formattedData;
+      const audio = new Audio(base64);
+      if (senderId !== userInfo._id) {
+        audio.play();
       }
     },
     [userInfo]
