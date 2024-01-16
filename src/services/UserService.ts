@@ -133,9 +133,7 @@ export const UserService = {
       };
     }
   },
-  async getAccessTokenByRefreshToken(): Promise<
-    IApiResponse<IUserInfo, string>
-  > {
+  async loginByRefreshToken(): Promise<IApiResponse<IUserInfo, string>> {
     try {
       const response = await baseAxios<null, AxiosResponse<IUserInfo>>({
         url: `/users/refresh-token`,
@@ -152,14 +150,14 @@ export const UserService = {
         return {
           status: "Error",
           errorCode: response.status,
-          errorMessage: "Get access token failed",
+          errorMessage: "Login by refresh token failed",
         };
       }
     } catch (e) {
       return {
         status: "Error",
         errorCode: 401,
-        errorMessage: "Get access token failed",
+        errorMessage: "Login by refresh token failed",
       };
     }
   },

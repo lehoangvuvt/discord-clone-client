@@ -26,9 +26,9 @@ const AuthHandler = () => {
     }
   }, [activities]);
 
-  const getAccessTokenByRefreshToken = async () => {
+  const loginByRefreshToken = async () => {
     const getAccessTokenResponse =
-      await UserService.getAccessTokenByRefreshToken();
+      await UserService.loginByRefreshToken();
     if (getAccessTokenResponse.status === "Success") {
       setUserInfo(getAccessTokenResponse.data);
       router.push("/me/friends");
@@ -50,7 +50,7 @@ const AuthHandler = () => {
           router.push("/me/friends");
         }
       } else {
-        getAccessTokenByRefreshToken();
+        loginByRefreshToken();
       }
     }
   }, [authenticationData, isLoading]);
