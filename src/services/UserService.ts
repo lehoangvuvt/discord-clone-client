@@ -289,7 +289,7 @@ export const UserService = {
     } catch (e: any) {
       return {
         status: "Error",
-        errorCode: 400,
+        errorCode: e.response.status,
         errorMessage: e.response.data.error,
       };
     }

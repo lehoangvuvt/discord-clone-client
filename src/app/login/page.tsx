@@ -16,8 +16,8 @@ import useStore from "@/zustand/useStore";
 
 const Login = () => {
   const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("lehoangvu");
+  const [password, setPassword] = useState("123456789");
   const [errorFields, setErrorFields] = useState<string[]>([]);
   const { userInfo, setUserInfo } = useStore();
   const dispatch = useDispatch();
