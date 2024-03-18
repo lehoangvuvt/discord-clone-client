@@ -18,20 +18,24 @@ const Login = () => {
   const router = useRouter();
   const [username, setUsername] = useState("lehoangvu");
   const [password, setPassword] = useState("123456789");
+  const [isLoading, setLoading] = useState(false);
   const [errorFields, setErrorFields] = useState<string[]>([]);
   const { userInfo, setUserInfo } = useStore();
   const dispatch = useDispatch();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isLoading) return;
+    setLoading(true);
     const data: ILoginData = { username, password };
     const response = await UserService.login(data);
     if (response.status === "Success") {
       setUserInfo(response.data);
       router.push("/me/friends");
     } else {
-      alert(false);
+      alert("Username or password incorrect");
     }
+    setLoading(false);
   };
 
   return (
@@ -89,6 +93,7 @@ const Login = () => {
             fontSize: "15px",
             marginTop: "15px",
           }}
+          loading={isLoading}
           disabled={
             errorFields.length > 0 ||
             username.length === 0 ||

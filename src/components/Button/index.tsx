@@ -1,6 +1,8 @@
 "use client";
 
 import styled from "styled-components";
+import { Spin } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 
 const Container = styled.button`
   padding: 0px 20px;
@@ -21,8 +23,11 @@ const Container = styled.button`
     filter: brightness(80%);
   }
   &.loading {
-    filter: brightness(80%);
+    background: rgba(255, 255, 255, 0.15) !important;
     cursor: progress;
+    &:hover {
+      filter: brightness(100%);
+    }
   }
   &.disabled {
     cursor: not-allowed;
@@ -48,10 +53,21 @@ const Button = ({
       style={style}
       disabled={disabled}
       className={disabled ? "disabled" : loading ? "loading" : ""}
-      onClick={onClick}
+      onClick={() => {
+        if (disabled || loading) return;
+        onClick && onClick();
+      }}
       type="submit"
     >
-      {children}
+      {loading ? (
+        <Spin
+          indicator={
+            <LoadingOutlined style={{ fontSize: 24, color: "white" }} spin />
+          }
+        />
+      ) : (
+        "Login"
+      )}
     </Container>
   );
 };
