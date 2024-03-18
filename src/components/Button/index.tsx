@@ -66,7 +66,7 @@ const Button = ({
           }
         />
       ) : (
-        "Login"
+        children
       )}
     </Container>
   );
