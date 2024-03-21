@@ -33,7 +33,7 @@ const Login = () => {
       setUserInfo(response.data);
       router.push("/me/friends");
     } else {
-      alert("Username or password incorrect");
+      alert("Username or password incorrect. Please try again");
     }
     setLoading(false);
   };
